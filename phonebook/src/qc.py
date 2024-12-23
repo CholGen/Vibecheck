@@ -6,6 +6,17 @@ from phonebook.src.console import console
 
 
 def check_query_file(files: list[str]) -> Path:
+    """Confirms the existance of a single query file.
+    Parameters
+    ----------
+    files: list[str]
+        list of input files to check.
+
+    Returns
+    -------
+    Path
+        Location of input fasta file.
+    """
     if len(files) > 1:
         console.log(
             f"[bold red]Error: Too many query (input) fasta files supplied: "
@@ -27,6 +38,18 @@ def check_query_file(files: list[str]) -> Path:
 
 
 def check_tree(usher_tree: str) -> Path:
+    """Confirms the existance of protobuf tree
+
+    Parameters
+    ----------
+    usher_tree: str
+        Puntative location of protobuf tree.
+
+    Returns
+    -------
+    Path
+        Location of confirmed protobuf tree.
+    """
     usher_tree = Path(usher_tree)
 
     if not usher_tree.exists():
@@ -40,6 +63,23 @@ def check_tree(usher_tree: str) -> Path:
 
 
 def setup_outdir(outdir: str, cwd: str) -> Path:
+    """Identifies and/or creates output directory for analysis. If supplied output
+    directory is a relative path, append it to the current working directory to create
+    an absolute path. Generate working directory if necessary and possible. Exits if
+    directory cannot be created.
+
+    Parameters
+    ----------
+    outdir: str
+        Putative output directory.
+    cwd: str
+        Current working directory.
+
+    Returns
+    -------
+    Path
+        Location of output directory.
+    """
     if outdir:
         outdir_path = Path(outdir).expanduser()
         if not outdir_path.is_absolute():
@@ -58,7 +98,25 @@ def setup_outdir(outdir: str, cwd: str) -> Path:
     return outdir_path
 
 
-def setup_tempdir(tempdir: str, outdir: str, no_temp: bool) -> Path:
+def setup_tempdir(tempdir: str, outdir: Path, no_temp: bool) -> Path:
+    """Identifies and/or creates temporary directory for analysis. If no temporary
+    files are to be created, use the output directory as the temporary directory. Else,
+    create output directory if necessary. Exits if directory cannot be created.
+
+    Parameters
+    ----------
+    tempdir: str
+        Putative temporary directory.
+    outdir: Path
+        Established output directory.
+    no_temp: bool
+        Whether to create temporary directory. If false, use the output directory.
+
+    Returns
+    -------
+    Path
+        Location of temporary directory.
+    """
     if no_temp:
         tempdir = Path(outdir)
     elif tempdir:
@@ -78,7 +136,7 @@ def setup_tempdir(tempdir: str, outdir: str, no_temp: bool) -> Path:
             console.log(f"Error: cannot create temp directory: {tempdir}.")
             sys.exit(-4)
         try:
-            with open(tempdir / "test.txt", "w") as f:
+            with open(tempdir / "tests.txt", "w") as f:
                 f.write("Test")
         except OSError:
             console.log(f"Error: cannot write to temp directory: {tempdir}.")

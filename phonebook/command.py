@@ -91,7 +91,7 @@ def main(sysargs=None):
             f"Warning: Specified output file {outfile} already exists and will be "
             f"overwritten."
         )
-    tempdir = qc.setup_tempdir(args.tempdir, args.outdir, args.no_temp)
+    tempdir = qc.setup_tempdir(args.tempdir, outdir, args.no_temp)
 
     if args.threads > threads:
         console.log(
