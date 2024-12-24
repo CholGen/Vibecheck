@@ -27,16 +27,16 @@ def run_command(
         command, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
 
-    # Write command output to log file if a log_path is provided
-    if log_path:
-        with open(log_path, "w") as logfile:
-            logfile.write(result.stdout)
-
     # Handle errors
     if result.returncode != 0:
         console.print(result.stdout)
         console.log(f"Error: {error_message}. See above for details.")
         sys.exit(result.returncode)
+
+    # Write command output to log file if a log_path is provided
+    if log_path:
+        with open(log_path, "w") as logfile:
+            logfile.write(result.stdout)
 
 
 def align_sequences(
@@ -178,7 +178,14 @@ def usher_parsing(results: Path, outfile: Path) -> None:
 
         with open(results, "r") as f:
             for line in f:
-                name, lineage_histogram = line.rstrip("\n").split("\t")
+
+                try:
+                    name, lineage_histogram = line.rstrip("\n").split("\t")
+                except ValueError:
+                    console.log(
+                        f"Error: Usher result file is malformed. Please check the file {results}."
+                    )
+                    sys.exit(-12)
                 if "*|" in lineage_histogram:
                     # example: A.28*|A.28(1/10),B.1(6/10),B.1.511(1/10),B.1.518(2/10)
                     lineage, histogram = lineage_histogram.split("*|")
