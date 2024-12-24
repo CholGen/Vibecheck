@@ -37,7 +37,7 @@ def main(sysargs=None):
     )
     parser.add_argument(
         "--usher-tree",
-        default=TREE,
+        default=str(TREE),
         help="UShER Mutation Annotated Tree protobuf file to use instead of default tree",
     )
     parser.add_argument(
@@ -80,6 +80,19 @@ def main(sysargs=None):
 
     console.rule("[bold] Checking input and setting up analysis")
 
+    # Checking requested threads.
+    if args.threads > threads:
+        console.log(
+            f"Error: Cannot request more cores than your computer has [{threads}]."
+        )
+        sys.exit(-99)
+    elif args.threads < 1:
+        console.log(
+            f"Error: Must request at least one core using the --threads option."
+        )
+        sys.exit(-98)
+    threads = args.threads
+
     # Checking input files
     query_file = qc.check_query_file(args.query)
     protobuf_file = qc.check_tree(args.usher_tree)
@@ -93,30 +106,19 @@ def main(sysargs=None):
         )
     tempdir = qc.setup_tempdir(args.tempdir, outdir, args.no_temp)
 
-    if args.threads > threads:
-        console.log(
-            f"Error: Cannot request more cores than your computer has [{threads}]."
-        )
-        sys.exit(-99)
-    threads = args.threads
-
     console.rule("[bold] Classifying input")
     with console.status("Processing...", spinner="bouncingBall"):
         console.log("Aligning sequences to reference")
         aln = tasks.align_sequences(query_file, REFERENCE, tempdir, threads)
-        time.sleep(5)
 
         console.log("Converting alignment to VCF")
         vcf = tasks.convert_to_vcf(aln, REFERENCE, tempdir)
-        time.sleep(5)
 
         console.log("Placing sequences into global phylogeny")
         results = tasks.classify_usher(vcf, protobuf_file, tempdir, threads)
-        time.sleep(5)
 
         console.log("Parsing Usher results")
         tasks.usher_parsing(results, outfile)
-        time.sleep(5)
 
     console.rule("[bold] Complete!")
     console.print(f"Lineage assignments are available in {outfile}.")
