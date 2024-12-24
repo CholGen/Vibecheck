@@ -37,12 +37,15 @@ def test_check_query_file_relative_path():
 
 
 def test_check_query_file_absolute_path():
+    # Please ignore my absolute path...
     file = "/Users/natem/Documents/Code/Killington/tests/example_fasta/ERR037738.fasta"
     result = check_query_file([file])
     assert result == Path(file)
 
 
 def test_check_query_file_tilde_path():
+    # I don't want any comments about my file structure. I'm not sure how else to test
+    # this.
     file = "~/Documents/Code/Killington/tests/example_fasta/ERR037738.fasta"
     result = check_query_file([file])
     assert result == Path(file).expanduser()
