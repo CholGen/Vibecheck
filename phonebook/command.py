@@ -9,8 +9,11 @@ from phonebook.src import qc, tasks
 from phonebook.src.console import console
 
 PACKAGE_DIR = files("phonebook")
-TREE = PACKAGE_DIR / "resources/o1_cholera.annotated.pb"
+TREE = PACKAGE_DIR / "resources/o1_cholera.no_missing.pb"
 REFERENCE = PACKAGE_DIR / "resources/reference.fasta"
+
+# Alternative names: Cholin, choline, Colin, vibecheck, vibcheck, vibration, vibrator,
+# marlin, vibrato, chool-aid
 
 
 def main(sysargs=None):
@@ -19,11 +22,12 @@ def main(sysargs=None):
 
     parser = argparse.ArgumentParser(
         prog="phonebook",
-        description="""\t\t     _               _           _   
-\t\t ___| |_ ___ ___ ___| |_ ___ ___| |_ 
-\t\t| . |   | . |   | -_| . | . | . | '_|
-\t\t|  _|_|_|___|_|_|___|___|___|___|_,_|
-\t\t|_|   
+        description=r"""██╗   ██╗██╗██████╗ ███████╗ ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗
+██║   ██║██║██╔══██╗██╔════╝██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝
+██║   ██║██║██████╔╝█████╗  ██║     ███████║█████╗  ██║     █████╔╝ 
+╚██╗ ██╔╝██║██╔══██╗██╔══╝  ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
+ ╚████╔╝ ██║██████╔╝███████╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
+  ╚═══╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
 
         Rapid classification of O1 Vibrio cholerae lineages.""",
         formatter_class=argparse.RawDescriptionHelpFormatter,

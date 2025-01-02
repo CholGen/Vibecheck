@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from urllib3.connection import BaseSSLError
 
 from phonebook.command import main
 
@@ -110,7 +109,9 @@ def inputA_notemp():
         shutil.rmtree(outdir)
 
 
-def test_inputA(inputA):
+# Try to refactor this in the future.
+# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
+def test_input(inputA):
     results = inputA / "lineage_report.csv"
     assert results.exists()
     assert results.read_text() == expected_resultA
@@ -135,6 +136,9 @@ def test_inputA_notemp_exists(inputA_notemp):
         "logs/minimap2.txt",
         "mapped.sam",
         "alignment.fasta",
+        "sequences.aln.vcf",
+        "sequences.withref.fa",
+        "clades.txt",
     ]
     for file in expected_files:
         file_path = inputA_notemp / file
