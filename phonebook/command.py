@@ -7,6 +7,7 @@ from importlib.resources import files
 
 from phonebook.src import qc, tasks
 from phonebook.src.console import console
+from phonebook import __version__
 
 PACKAGE_DIR = files("phonebook")
 TREE = PACKAGE_DIR / "resources/o1_cholera.no_missing.pb"
@@ -75,12 +76,22 @@ def main(sysargs=None):
         help=f"Number of threads to use when possible. Default: all available cores, "
         f"{threads} detected on this machine",
     )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Prints the version of Vibecheck and exits.",
+    )
 
     if len(sysargs) < 1:
         parser.print_help()
         sys.exit(-1)
 
     args = parser.parse_args(sysargs)
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
 
     console.rule("[bold] Checking input and setting up analysis")
 
