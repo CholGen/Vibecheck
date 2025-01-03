@@ -2,32 +2,52 @@
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset=".github/logo_light.png">
       <source media="(prefers-color-scheme: light)" srcset=".github/logo_dark.png">
-      <img alt="bacpage" src=".github/logo_dark.png" width=500>
+      <img alt="vibecheck" src=".github/logo_dark.png" width=500>
     </picture>
 </p>
 
-This repository contains an easy-to-use pipeline for the assembly and analysis of bacterial genomes using ONT long-read or Illumina short-read technology. 
-Read the complete documentation and instructions for bacpage and each of its functions [here](https://cholgen.github.io/sequencing-resources/bacpage-command.html)
+# Vibecheck
+
+This repository contains an easy-to-use program to assign O1 *Vibrio cholerae* genomes to [canonical lineages](https://doi.org/10.1126/science.aad5901) using phylogenetic placement.  
+
+## Table of Contents
+1. [Introduction](#introduction)
+2. [How it Works](#how-it-works)
+3. [Installation](#installation)
+4. [Updating](#updating)
+5. [Usage](#usage)
+6. [Output](#output)
 
 # Introduction
-Advances in sequencing technology during the COVID-19 pandemic has led to massive increases in the generation of sequencing data. Many bioinformatics tools have been developed to analyze this data, but very few tools can be utilized by individuals without prior bioinformatics training.
+Genomic surveillance of cholera has identified at least three waves of global transmission from Asia to Africa during 
+the seventh pandemic (7PET), and at least 17 independent introductions of 7PET into Africa (deemed the T1-T17 lineages). 
+These lineages have been used to connect apparently disparate outbreaks, characterize regional tranmission patterns, 
+and suggested possible transmission routes of cholera within Africa. 
+As well, genomic differences between lineages might explain differences in severity and transmissibility observed between different outbreaks.
+Vibecheck enables the rapid assignment of sequences to these canonical lineages, as an alternative to a lengthy and 
+computationally intensive reconstruction of the global phylogeny.
 
-This pipeline was designed to encapsulate pre-existing tools to automate analysis of whole genome sequencing of bacteria. 
-Installation is fast and straightfoward. 
-The pipeline is easy to setup and contains rationale defaults, but is highly modular and configurable by more advance users.
-Bacpage has individual commands to generate consensus sequences, perform *de novo* assembly, construct phylogenetic tree, and generate quality control reports.
+# How it works
+> [!NOTE]
+> Vibecheck is basically a fork of [Pangolin](https://github.com/cov-lineages/pangolin) (and accompaning [paper](https://doi.org/10.1093/ve/veab064)), in which the QC and hashing steps are removed, and an O1 _Vibrio cholerae_ global phylogeny is used.
+> Therefore, we'd like to thank Áine O'Toole, Verity Hill, JT McCrone, Emily Scher and Andrew Rambaut for creating such a great and open-source tool.
 
-# Features
-We anticipate the pipeline will be able to perform the following functions:
-- [x] Reference-based assembly of Illumina paired-end reads
-- [x] *De novo* assembly of Illumina paired-end reads
-- [ ] *De novo* assembly of ONT long reads
-- [x] Run quality control checks
-- [x] Variant calling using [bcftools](https://github.com/samtools/bcftools)
-- [x] Maximum-likelihood phylogenetic inference of processed samples and background dataset using [iqtree](https://github.com/iqtree/iqtree2) 
-- [x] MLST profiling and virulence factor detection
-- [x] Antimicrobial resistance genes detection
-- [ ] Plasmid detection
+<p align="center">
+    <picture>
+      <img alt="vibecheck" src=".github/vibecheck-pipeline.png" width=500>
+    </picture>
+</p>
+
+Vibecheck assigns sequences to the most likely cannonical O1 _Vibrio cholerae_ lineages. 
+To do so, Vibecheck:
+
+1. Aligns all input sequences against an early reference O1 _Vibrio cholerae_ genome. 
+Vibecheck generates the alignment using [minimap2](https://github.com/lh3/minimap2) to map sequences again the reference and generates a multisequence fasta from the mapping using [gofasta](https://github.com/virus-evolution/gofasta).
+2. ~~The sequences are run through a sequence QC check that reports proportion ambiguity of a given sequence. 
+Any sequences that fail this check will not get assigned a lineage.~~ *TODO*
+3. Identifies SNP differences between each sequence and the reference (i.e. variants) and generates a VCF file summarizing the variants using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master) script.
+4. Places each sequence into a lineage-annotated phylogeny using [UShER](https://github.com/yatisht/usher), and records whether the placement is contained within a lineage.
+5. Parses the output of UShER, calculates the confidence in each lineage estimation, and produces a final lineage report.
 
 # Installation
 1. Install `mamba` by running the following two command:
@@ -36,72 +56,130 @@ curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Ma
 bash Mambaforge-$(uname)-$(uname -m).sh
 ```
 
-2. Clone the bacpage repository:
+2. Clone the vibecheck repository:
 ```commandline
-git clone https://github.com/CholGen/bacpage.git
+git clone https://github.com/CholGen/vibecheck.git
 ```
 
-3. Switch to the development branch of the pipeline:
+3. Move to the repository:
 ```commandline
-cd bacpage/
-git checkout -b split_into_command
+cd vibecheck/
 ```
 
-3. Install and activate the pipeline's conda environment:
+3. Install and activate the vibecheck's conda environment:
 ```commandline
 mamba env create -f environment.yaml
-mamba activate bacpage
+mamba activate vibecheck
 ```
 
-4. Install the `bacpage` command:
+4. Install the `vibecheck` command:
 ```commandline
 pip install .
 ```
 
 5. Test the installation:
 ```commandline
-bacpage -h
-bacpage version
+vibecheck -h
+vibecheck -v
 ```
 These command should print the help and version of the program. Please create an issue if this is not the case.
 
 # Updating
 
-1. Navigate to the directory where you cloned the bacpage repository on the command line:
+1. Navigate to the directory where you cloned the vibecheck repository on the command line:
 ```commandline
-cd bacpage/
+cd vibecheck/
 ```
-2. Activate the bacpage conda environment:
+2. Activate the vibecheck conda environment:
 ```commandline
-mamba activate bacpage
+mamba activate vibecheck
 ```
 3. Pull the lastest changes from GitHub:
 ```commandline
 git pull
 ```
-4. Update the bacpage conda environemnt:
+4. Update the vibecheck conda environemnt:
 ```commandline
 mamba env update -f environment.yaml
 ```
-5. Reinstall the `bacpage` command:
+5. Reinstall the `vibecheck` command:
 ```commandline
 pip install .
 ```
 
 # Usage
-0. Activate the bacpage conda environment:
+0. Activate the vibecheck conda environment:
 ```commandline
-mamba activate bacpage
+mamba activate vibecheck
 ```
-1. Create a directory specifically for the batch of samples you would like to analyze (called a project directory).
+1. Run
 ```commandline
-bacpage setup [your-project-directory-name]
+vibecheck [query]
 ```
-2. Place paired sequencing reads in the `input/` directory of your project directory.
-3. From the pipeline's directory, run the reference-based assembly pipeline on your samples using the following command:
-```commandline
-bacpage assemble [your-project-directory-name]
+Where `[query]` is a the name of your input fasta file. 
+The query file can contain as many sequences as you would like to be classified.
+
+
+This command will generate a CSV file (`lineage_report.csv`) containing the estimated lineages for each sequence in the query file. 
+See [Output](#output) for a complete description of this file.
+
+## Full usage options
 ```
-This will generate a consensus sequence in FASTA format for each of your samples and place them in 
-`<your-project-directory-name>/results/consensus_sequences/<sample>.masked.fasta`. An HTML report containing alignment 
-and quality metrics for your samples can be found at `<your-project-directory-name>/results/reports/qc_report.html`.
+usage: phonebook [-h] [--usher-tree USHER_TREE] [-o OUTDIR] [--outfile OUTFILE] [--tempdir TEMPDIR] [--no-temp] [-t THREADS] [query ...]
+
+██╗   ██╗██╗██████╗ ███████╗ ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗
+██║   ██║██║██╔══██╗██╔════╝██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝
+██║   ██║██║██████╔╝█████╗  ██║     ███████║█████╗  ██║     █████╔╝ 
+╚██╗ ██╔╝██║██╔══██╗██╔══╝  ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
+ ╚████╔╝ ██║██████╔╝███████╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
+  ╚═══╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
+
+        Rapid classification of O1 Vibrio cholerae lineages.
+
+positional arguments:
+  query                 Query fasta files of sequences to classify
+
+options:
+  -h, --help            show this help message and exit
+  --usher-tree USHER_TREE
+                        UShER Mutation Annotated Tree protobuf file to use instead of default tree
+  -o OUTDIR, --outdir OUTDIR
+                        Output directory. Default: current working directory
+  --outfile OUTFILE     Optional output file name. Default: lineage_report.csv
+  --tempdir TEMPDIR     Specify where you want the temp stuff to go. Default: $TMPDIR
+  --no-temp             Output all intermediate files, for dev purposes.
+  -t THREADS, --threads THREADS
+                        Number of threads to use when possible. Default: all available cores, 12 detected on this machine
+```
+
+# Output
+A successful run of Vibecheck will output a CSV file, named by default `lineage_report.csv`.
+
+This output file contains 4 columns with a row for each sequence found in the query input file.
+- The `sequence_id` column contains the name of each provided sequence.
+- The `lineage` column contains the most likely lineage assigned to a sequence.
+- The `conflict` column contains a value reflecting how uncertain the assignment of a sequence is. 
+A value of 0 indicates, given the current phylogenetic tree, there is only a single lineage that the sequence could be assigned to, while a value above 0 indicates that number of lineages that a sequence could be assigned to.
+- The `usher_note` column contains the placements of 
+
+> [!NOTE]
+> The assignment of a sequence is sensitive to missing data at key sites, recombination, and other factors. 
+> Therefore, caution should be taken in interpreting the results of Vibecheck. 
+> All results should be confirmed with a complete phylogenetic reconstruction involing quality and compeleteness filtering, and recombination masking.
+> We recommend the [bacpage phylogeny](https://github.com/CholGen/bacpage) (available on [Terra](https://dockstore.org/workflows/github.com/CholGen/bacpage/bacpage-phylogeny) as well) pipeline for this.
+
+## Example output
+
+| sequence_id | lineage | conflict | usher_note                                |
+|-------------|---------|----------|-------------------------------------------|
+| _SequenceA_ | T13     | 0.0      | Usher placements: T13(1/1)                |
+| _SequenceB_ | T15     | 0.0      | Usher placements: T15(1/1)                |
+| _SequenceC_ | T12     | 0.0      | Usher placements: T12(8/8)                |
+| _SequenceD_ | T13     | 0.33333  | Usher placements: T13(2/3) UNDEFINED(1/3) |
+
+In the example above, _SequenceA_ and _SequenceB_ each have a single parsimoneous placement in the phylogeny and are therefore assigned T13 and T15, respectively, with a conflict value of 0 indicating high certainty.
+_SequenceC_ has eight parsimoneous placements in the phylogeny (as indicated by the `(8/8)` in the `usher_note` column). 
+However, all of these placements are in the T12 lineage. Therefore, _SequenceC_ is assigned the lienage T12 with a conflict value of 0 indicating high certainty.
+_SequenceD_ has three parsimoneous placements in the phylogeny, two of which fall in the T13 lineage, and one which falls into non-African diversity.
+SequenceD is therefore assigned as T13 because it is the most frequent assignment, but it has a conflict value greater than 0 indicating an uncertain assignment. 
+The quality and completeness of this sequence should be confirmed, and a complete phylogenetic construction should be completed to confirm the lineage assignment.
