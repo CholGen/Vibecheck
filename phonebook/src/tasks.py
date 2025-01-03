@@ -174,7 +174,7 @@ def usher_parsing(results: Path, outfile: Path) -> None:
         Location of desired output file.
     """
     with open(outfile, "w") as fw:
-        fw.write("hash,lineage,conflict,usher_note\n")
+        fw.write("sequence_id,lineage,conflict,usher_note\n")
 
         with open(results, "r") as f:
             for line in f:

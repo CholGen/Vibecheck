@@ -128,7 +128,7 @@ def test_usher_parsing_valid_input(tmp_path):
     usher_parsing(results, outfile)
 
     expected = (
-        "hash,lineage,conflict,usher_note\n"
+        "sequence_id,lineage,conflict,usher_note\n"
         "hash1,A.28,0.9,Usher placements: A.28(1/10) B.1(6/10)\n"
         "hash2,B.1.1,,\n"
     )
@@ -142,7 +142,7 @@ def test_usher_parsing_empty_input(tmp_path):
     results.touch()
     usher_parsing(results, outfile)
 
-    assert outfile.read_text() == "hash,lineage,conflict,usher_note\n"
+    assert outfile.read_text() == "sequence_id,lineage,conflict,usher_note\n"
 
 
 def test_usher_parsing_malformed_input(tmp_path):

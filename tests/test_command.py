@@ -6,9 +6,9 @@ import pytest
 
 from phonebook.command import main
 
-expected_resultA = "hash,lineage,conflict,usher_note\nAfrica|KEN|ERR037738|T10|2010-01-01,T10,0.0,Usher placements: T10(1/1)\n"
-expected_resultB = "hash,lineage,conflict,usher_note\nAfrica|ZAF|ERS14903183|T15|2023-01-01,T15,0.0,Usher placements: T15(1/1)\n"
-expected_resultC = "hash,lineage,conflict,usher_note\nAfrica|TZA|SAMN19110428|T13|2017-01-01,T13,0.0,Usher placements: T13(1/1)\n"
+expected_resultA = "sequence_id,lineage,conflict,usher_note\nAfrica|KEN|ERR037738|T10|2010-01-01,T10,0.0,Usher placements: T10(1/1)\n"
+expected_resultB = "sequence_id,lineage,conflict,usher_note\nAfrica|ZAF|ERS14903183|T15|2023-01-01,T15,0.0,Usher placements: T15(1/1)\n"
+expected_resultC = "sequence_id,lineage,conflict,usher_note\nAfrica|TZA|SAMN19110428|T13|2017-01-01,T13,0.0,Usher placements: T13(1/1)\n"
 
 
 @patch("argparse.ArgumentParser.print_help")
