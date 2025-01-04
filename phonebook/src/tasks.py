@@ -2,9 +2,15 @@ import sys
 from pathlib import Path
 import subprocess
 import re
-from typing import Union
+from typing import Tuple, Union
+
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 
 from phonebook.src.console import console
+
+OTHER_IUPAC = {"r", "y", "s", "w", "k", "m", "d", "h", "b", "v"}
+VALID_CHARACTERS = [{"a"}, {"c"}, {"g"}, {"t"}, {"n"}, OTHER_IUPAC, {"-"}, {"?"}]
 
 
 def run_command(
@@ -80,6 +86,71 @@ def align_sequences(
         sys.exit(-10)
 
     return alignment
+
+
+def calculate_ambiquity(record: SeqRecord) -> float:
+    seq = record.seq.lower()
+    l = len(seq)
+    counts = []
+
+    for v in VALID_CHARACTERS:
+        counts.append(sum(map(lambda x: seq.count(x), v)))
+    invalid_nucleotides = l - sum(counts)
+
+    if invalid_nucleotides > 0:
+        console.log(
+            f"Warning: Invalid characters in sequence {record.id}. Might not be a valid nucleotide sequence."
+        )
+
+    return 1 - (sum(counts[:4]) / l)
+
+
+def sequence_qc(
+    alignment: Path, tempdir: Path, max_ambiguity: float = 0.3
+) -> Tuple[Path, Path]:
+    """Loads the aligned fasta file, calculates the percentage of bases that are N,
+    if it's greater than max_ambiguity, indicate that qc is failed, writes result to
+    file, but not to output fasta.
+
+    Parameters
+    ----------
+    alignment: Path
+        Location of aligned fasta file.
+    tempdir: Path
+        Location of temporary directory.
+    max_ambiguity: float
+        Maximum number of ambiguous bases a seqeuence can have before it is removed.
+
+    Returns
+    ----------
+    Path
+        Location of CSV file containing QC results
+    Path
+        Location of fasta alignment file, containing only sequences that passed QC.
+    """
+
+    pass_qc = tempdir / "alignment.filtered.fasta"
+    qc_status = tempdir / "seq_status.csv"
+
+    with open(qc_status, "w") as fw, open(pass_qc, "w") as fw_pass:
+        fw.write("sequence_id,qc_status,qc_notes\n")
+
+        total_input = 0
+        total_pass = 0
+
+        for record in SeqIO.parse(alignment, "fasta"):
+            total_input += 1
+
+            proportion_N = calculate_ambiquity(record)
+            if proportion_N > max_ambiguity:
+                fw.write(f"{record.id},fail,Ambiguous_content:{proportion_N:.2%}\n")
+            else:
+                total_pass += 1
+
+                fw.write(f"{record.id},pass,Ambiguous_content:{proportion_N:.2%}\n")
+                fw_pass.write(f">{record.id}\n{record.seq}\n")
+
+    return qc_status, pass_qc
 
 
 def convert_to_vcf(aln: Path, reference: Path, tempdir: Path) -> Path:

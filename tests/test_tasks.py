@@ -2,12 +2,17 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 from phonebook.src.tasks import (
     align_sequences,
+    calculate_ambiquity,
     classify_usher,
     convert_to_vcf,
     run_command,
+    sequence_qc,
     usher_parsing,
 )
 
@@ -153,3 +158,132 @@ def test_usher_parsing_malformed_input(tmp_path):
     with pytest.raises(SystemExit) as e:  # Or the expected exception
         usher_parsing(results, outfile)
     assert e.value.code == -12
+
+
+def test_calculate_completeness_valid_sequence():
+    record = SeqRecord(Seq("ACGTACGTACGT"), id="valid_seq")
+    completeness = calculate_ambiquity(record)
+    assert completeness == 0
+
+
+def test_calculate_completeness_with_ambiguity():
+    record = SeqRecord(Seq("ACGTNNNNACGT"), id="ambiguous_seq")
+    completeness = calculate_ambiquity(record)
+    assert completeness == pytest.approx(4 / 12)
+
+
+@patch("rich.console.Console.log")
+def test_calculate_completeness_with_invalid_characters(mock_log):
+    record = SeqRecord(Seq("ACGTACGTXXX"), id="invalid_seq")
+    completeness = calculate_ambiquity(record)
+    assert mock_log.call_count == 1
+    mock_log.assert_called_with(
+        "Warning: Invalid characters in sequence invalid_seq. Might not be a valid nucleotide sequence."
+    )
+    # Invalid characters don't contribute to counts
+    assert completeness == pytest.approx(3 / 11)
+
+
+def create_fasta(records, path):
+    """Helper function to create a test FASTA file."""
+    with open(path, "w") as f:
+        SeqIO.write(records, f, "fasta")
+
+
+def test_sequence_qc_all_pass(tmp_path):
+    alignment = tmp_path / "alignment.fasta"
+    tempdir = tmp_path / "temp"
+    tempdir.mkdir()
+
+    # Create test sequences
+    records = [
+        SeqRecord(Seq("ACGTACGTACGT"), id="seq1"),
+        SeqRecord(Seq("ACGTNNNNACGT"), id="seq2"),
+    ]
+    create_fasta(records, alignment)
+
+    qc_status, pass_qc = sequence_qc(alignment, tempdir, max_ambiguity=0.5)
+
+    # Check QC status file
+    with open(qc_status) as f:
+        lines = f.readlines()
+        assert len(lines) == 3  # Header + 2 sequences
+        assert "seq1,pass" in lines[1]
+        assert "seq2,pass" in lines[2]
+
+    # Check filtered FASTA file
+    passed_records = list(SeqIO.parse(pass_qc, "fasta"))
+    assert len(passed_records) == 2
+
+
+def test_sequence_qc_some_fail(tmp_path):
+    alignment = tmp_path / "alignment.fasta"
+    tempdir = tmp_path / "temp"
+    tempdir.mkdir()
+
+    # Create test sequences
+    records = [
+        SeqRecord(Seq("ACGTACGTACGT"), id="seq1"),
+        SeqRecord(Seq("NNNNNNNNNNNN"), id="seq2"),
+    ]
+    create_fasta(records, alignment)
+
+    qc_status, pass_qc = sequence_qc(alignment, tempdir, max_ambiguity=0.5)
+
+    # Check QC status file
+    with open(qc_status) as f:
+        lines = f.readlines()
+        assert len(lines) == 3  # Header + 2 sequences
+        assert "seq1,pass" in lines[1]
+        assert "seq2,fail" in lines[2]
+
+    # Check filtered FASTA file
+    passed_records = list(SeqIO.parse(pass_qc, "fasta"))
+    assert len(passed_records) == 1
+    assert passed_records[0].id == "seq1"
+
+
+def test_sequence_qc_all_fail(tmp_path):
+    alignment = tmp_path / "alignment.fasta"
+    tempdir = tmp_path / "temp"
+    tempdir.mkdir()
+
+    # Create test sequences
+    records = [
+        SeqRecord(Seq("NNNNNNNNNNNN"), id="seq1"),
+        SeqRecord(Seq("NNNNNNNNNNNN"), id="seq2"),
+    ]
+    create_fasta(records, alignment)
+
+    qc_status, pass_qc = sequence_qc(alignment, tempdir, max_ambiguity=0.1)
+
+    # Check QC status file
+    with open(qc_status) as f:
+        lines = f.readlines()
+        assert len(lines) == 3  # Header + 2 sequences
+        assert "seq1,fail" in lines[1]
+        assert "seq2,fail" in lines[2]
+
+    # Check filtered FASTA file
+    passed_records = list(SeqIO.parse(pass_qc, "fasta"))
+    assert len(passed_records) == 0
+
+
+def test_sequence_qc_empty_input(tmp_path):
+    alignment = tmp_path / "empty.fasta"
+    tempdir = tmp_path / "temp"
+    tempdir.mkdir()
+
+    # Create empty FASTA file
+    alignment.touch()
+
+    qc_status, pass_qc = sequence_qc(alignment, tempdir, max_ambiguity=0.5)
+
+    # Check QC status file
+    with open(qc_status) as f:
+        lines = f.readlines()
+        assert len(lines) == 1  # Only header
+
+    # Check filtered FASTA file
+    passed_records = list(SeqIO.parse(pass_qc, "fasta"))
+    assert len(passed_records) == 0
