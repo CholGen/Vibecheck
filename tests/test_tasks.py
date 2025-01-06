@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from phonebook.src.tasks import (
+from vibecheck.src.tasks import (
     align_sequences,
     calculate_ambiquity,
     classify_usher,
@@ -35,7 +35,7 @@ def test_run_command_no_log():
 
 # TODO: This basically just tests that the output is created and called
 #  "alignment.fasta". That needs to be changed.
-@patch("phonebook.src.tasks.run_command")
+@patch("vibecheck.src.tasks.run_command")
 def test_align_sequences_success(mock_run_command, tmp_path):
     query_sequences = tmp_path / "query.fasta"
     reference = tmp_path / "reference.fasta"
@@ -52,7 +52,7 @@ def test_align_sequences_success(mock_run_command, tmp_path):
     assert result == alignment
 
 
-@patch("phonebook.src.tasks.run_command", side_effect=SystemExit(1))
+@patch("vibecheck.src.tasks.run_command", side_effect=SystemExit(1))
 def test_align_sequences_failure(mock_run_command, tmp_path):
     query_sequences = tmp_path / "query.fasta"
     reference = tmp_path / "reference.fasta"
@@ -68,7 +68,7 @@ def test_align_sequences_failure(mock_run_command, tmp_path):
     assert e.value.code == 1
 
 
-@patch("phonebook.src.tasks.run_command")
+@patch("vibecheck.src.tasks.run_command")
 def test_convert_to_vcf_success(mock_run_command, tmp_path):
     aln = tmp_path / "alignment.fasta"
     reference = tmp_path / "reference.fasta"
@@ -97,7 +97,7 @@ def test_convert_to_vcf_missing_alignment(tmp_path):
     assert e.value.code != 0  # Could also be 1
 
 
-@patch("phonebook.src.tasks.run_command")
+@patch("vibecheck.src.tasks.run_command")
 def test_classify_usher_success(mock_run_command, tmp_path):
     vcf = tmp_path / "sequences.vcf"
     protobuf_tree = tmp_path / "tree.pb"

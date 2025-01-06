@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "phonebook"
+name = "vibecheck"
 authors = [
     {name = "Nate Matteson", email = "nmatteson@bwh.harvard.edu"},
     {name = "watronfire", email="snowboardman007@gmail.com"}
@@ -44,7 +44,7 @@ phonebook = "phonebook.command:main"
 
 [tool.setuptools.dynamic]
 readme = {file = "README.md", content-type="text/markdown"}
-version = {attr = "phonebook.__version__"}
+version = {attr = "vibecheck.__version__"}
 
 #[tool.pytest.ini_options]
 #markers = [

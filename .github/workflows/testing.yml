@@ -33,4 +33,4 @@ jobs:
           cache-environment: true
           environment-file: test_environment.yaml
       - name: Run tests
-        run: micromamba run -n phonebook python -m pytest --rootdir=. . --junitxml=junit/test-results.xml
+        run: micromamba run -n vibecheck python -m pytest --rootdir=. . --junitxml=junit/test-results.xml

@@ -1,4 +1,4 @@
-name: Killington
+name: vibecheck
 channels:
   - conda-forge
   - bioconda

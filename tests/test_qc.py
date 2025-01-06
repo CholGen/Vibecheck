@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from phonebook.src.qc import check_query_file, check_tree, setup_outdir, setup_tempdir
+from vibecheck.src.qc import check_query_file, check_tree, setup_outdir, setup_tempdir
 
 
 def test_check_query_file_single_file(tmp_path):

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from phonebook.command import main
+from vibecheck.command import main
 
 expected_resultAll = (
     "sequence_id,qc_status,qc_notes,lineage,conflict,usher_note\n"
