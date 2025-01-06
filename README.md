@@ -34,7 +34,7 @@ computationally intensive reconstruction of the global phylogeny.
 
 <p align="center">
     <picture>
-      <img alt="vibecheck" src=".github/vibecheck-pipeline.png" width=500>
+      <img alt="vibecheck" src=".github/vibecheck-pipeline.png" width=900>
     </picture>
 </p>
 
