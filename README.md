@@ -43,8 +43,8 @@ To do so, Vibecheck:
 
 1. Aligns all input sequences against an early reference O1 _Vibrio cholerae_ genome. 
 Vibecheck generates the alignment using [minimap2](https://github.com/lh3/minimap2) to map sequences again the reference and generates a multi-sequence fasta from the mapping using [gofasta](https://github.com/virus-evolution/gofasta).
-2. ~~The sequences are run through a sequence QC check that reports proportion ambiguity of a given sequence. 
-Any sequences that fail this check will not get assigned a lineage.~~ *TODO*
+2. The sequences are run through a sequence QC check that reports the proportion of each sequence that is ambiguous characters. 
+Any sequences that fail this check will not get assigned a lineage.
 3. Identifies SNP differences between each sequence and the reference (i.e. variants) and generates a VCF file summarizing the variants using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master) script.
 4. Places each sequence into a lineage-annotated phylogeny using [UShER](https://github.com/yatisht/usher), and records whether the placement is contained within a lineage.
 5. Parses the output of UShER, calculates the confidence in each lineage estimation, and produces a final lineage report.
