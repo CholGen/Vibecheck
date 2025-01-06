@@ -21,7 +21,7 @@ This repository contains an easy-to-use program to assign O1 *Vibrio cholerae* g
 # Introduction
 Genomic surveillance of cholera has identified at least three waves of global transmission from Asia to Africa during 
 the seventh pandemic (7PET), and at least 17 independent introductions of 7PET into Africa (deemed the T1-T17 lineages). 
-These lineages have been used to connect apparently disparate outbreaks, characterize regional tranmission patterns, 
+These lineages have been used to connect apparently disparate outbreaks, characterize regional transmission patterns, 
 and suggested possible transmission routes of cholera within Africa. 
 As well, genomic differences between lineages might explain differences in severity and transmissibility observed between different outbreaks.
 Vibecheck enables the rapid assignment of sequences to these canonical lineages, as an alternative to a lengthy and 
@@ -29,7 +29,7 @@ computationally intensive reconstruction of the global phylogeny.
 
 # How it works
 > [!NOTE]
-> Vibecheck is basically a fork of [Pangolin](https://github.com/cov-lineages/pangolin) (and accompaning [paper](https://doi.org/10.1093/ve/veab064)), in which the QC and hashing steps are removed, and an O1 _Vibrio cholerae_ global phylogeny is used.
+> Vibecheck is basically a fork of [Pangolin](https://github.com/cov-lineages/pangolin) (and accompanying [paper](https://doi.org/10.1093/ve/veab064)), in which the QC and hashing steps are removed, and an O1 _Vibrio cholerae_ global phylogeny is used.
 > Therefore, we'd like to thank Áine O'Toole, Verity Hill, JT McCrone, Emily Scher and Andrew Rambaut for creating such a great and open-source tool.
 
 <p align="center">
@@ -38,11 +38,11 @@ computationally intensive reconstruction of the global phylogeny.
     </picture>
 </p>
 
-Vibecheck assigns sequences to the most likely cannonical O1 _Vibrio cholerae_ lineages. 
+Vibecheck assigns sequences to the most likely canonical O1 _Vibrio cholerae_ lineages. 
 To do so, Vibecheck:
 
 1. Aligns all input sequences against an early reference O1 _Vibrio cholerae_ genome. 
-Vibecheck generates the alignment using [minimap2](https://github.com/lh3/minimap2) to map sequences again the reference and generates a multisequence fasta from the mapping using [gofasta](https://github.com/virus-evolution/gofasta).
+Vibecheck generates the alignment using [minimap2](https://github.com/lh3/minimap2) to map sequences again the reference and generates a multi-sequence fasta from the mapping using [gofasta](https://github.com/virus-evolution/gofasta).
 2. ~~The sequences are run through a sequence QC check that reports proportion ambiguity of a given sequence. 
 Any sequences that fail this check will not get assigned a lineage.~~ *TODO*
 3. Identifies SNP differences between each sequence and the reference (i.e. variants) and generates a VCF file summarizing the variants using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master) script.
@@ -94,11 +94,11 @@ cd vibecheck/
 ```commandline
 mamba activate vibecheck
 ```
-3. Pull the lastest changes from GitHub:
+3. Pull the latest changes from GitHub:
 ```commandline
 git pull
 ```
-4. Update the vibecheck conda environemnt:
+4. Update the vibecheck conda environment:
 ```commandline
 mamba env update -f environment.yaml
 ```
@@ -167,7 +167,7 @@ A value of 0 indicates, given the current phylogenetic tree, there is only a sin
 > [!NOTE]
 > The assignment of a sequence is sensitive to missing data at key sites, recombination, and other factors. 
 > Therefore, caution should be taken in interpreting the results of Vibecheck. 
-> All results should be confirmed with a complete phylogenetic reconstruction involving quality and compeleteness filtering, and recombination masking.
+> All results should be confirmed with a complete phylogenetic reconstruction involving quality and completeness filtering, and recombination masking.
 > We recommend the [bacpage phylogeny](https://github.com/CholGen/bacpage) (available on [Terra](https://dockstore.org/workflows/github.com/CholGen/bacpage/bacpage-phylogeny) as well) pipeline for this.
 
 ## Example output
@@ -179,9 +179,9 @@ A value of 0 indicates, given the current phylogenetic tree, there is only a sin
 | _SequenceC_ | pass      | Ambiguous_content:0.02% | T12     | 0.0      | Usher placements: T12(8/8)                |
 | _SequenceD_ | pass      | Ambiguous_content:0.13% | T13     | 0.33333  | Usher placements: T13(2/3) UNDEFINED(1/3) |
 
-In the example above, _SequenceA_ and _SequenceB_ each have a single parsimoneous placement in the phylogeny and are therefore assigned T13 and T15, respectively, with a conflict value of 0 indicating high certainty.
-_SequenceC_ has eight parsimoneous placements in the phylogeny (as indicated by the `(8/8)` in the `usher_note` column). 
-However, all of these placements are in the T12 lineage. Therefore, _SequenceC_ is assigned the lienage T12 with a conflict value of 0 indicating high certainty.
-_SequenceD_ has three parsimoneous placements in the phylogeny, two of which fall in the T13 lineage, and one which falls into non-African diversity.
+In the example above, _SequenceA_ and _SequenceB_ each have a single parsimonious placement in the phylogeny and are therefore assigned T13 and T15, respectively, with a conflict value of 0 indicating high certainty.
+_SequenceC_ has eight parsimonious placements in the phylogeny (as indicated by the `(8/8)` in the `usher_note` column). 
+However, all of these placements are in the T12 lineage. Therefore, _SequenceC_ is assigned the lineage T12 with a conflict value of 0 indicating high certainty.
+_SequenceD_ has three parsimonious placements in the phylogeny, two of which fall in the T13 lineage, and one which falls into non-African diversity.
 SequenceD is therefore assigned as T13 because it is the most frequent assignment, but it has a conflict value greater than 0 indicating an uncertain assignment. 
 The quality and completeness of this sequence should be confirmed, and a complete phylogenetic construction should be completed to confirm the lineage assignment.
