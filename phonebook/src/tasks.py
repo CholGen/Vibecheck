@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import re
 from typing import Tuple, Union
+import pandas as pd
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -233,7 +234,7 @@ def classify_usher(vcf: Path, protobuf_tree: Path, tempdir: Path, threads: int) 
     return clades
 
 
-def usher_parsing(results: Path, outfile: Path) -> None:
+def usher_parsing(results: Path, tempdir: Path) -> Path:
     """Parses results from Usher classification into columnar format. Basically just
     splits lineage histogram produced when there are multiple parsimonious placements.
 
@@ -241,9 +242,12 @@ def usher_parsing(results: Path, outfile: Path) -> None:
     ----------
     results: Path
         Location of results from Usher classification.
-    outfile: Path
-        Location of desired output file.
+    tempdir: Path
+        Location of temporary directory.
     """
+
+    outfile = tempdir / "parsed_results.csv"
+
     with open(outfile, "w") as fw:
         fw.write("sequence_id,lineage,conflict,usher_note\n")
 
@@ -286,3 +290,11 @@ def usher_parsing(results: Path, outfile: Path) -> None:
                     histogram_note = ""
 
                 fw.write(f"{name},{lineage},{conflict},{histogram_note}\n")
+    return outfile
+
+
+def combine_results(usher_results: Path, qc_results: Path, outfile: Path) -> None:
+    usher_pd = pd.read_csv(usher_results)
+    qc_pd = pd.read_csv(qc_results)
+    results = qc_pd.merge(usher_pd, how="outer", on="sequence_id")
+    results.to_csv(outfile, index=False)

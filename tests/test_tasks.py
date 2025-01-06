@@ -130,7 +130,7 @@ def test_usher_parsing_valid_input(tmp_path):
     outfile = tmp_path / "parsed_results.csv"
 
     results.write_text("hash1\tA.28*|A.28(1/10),B.1(6/10)\nhash2\tB.1.1\n")
-    usher_parsing(results, outfile)
+    usher_parsing(results, tmp_path)
 
     expected = (
         "sequence_id,lineage,conflict,usher_note\n"
@@ -145,18 +145,17 @@ def test_usher_parsing_empty_input(tmp_path):
     outfile = tmp_path / "parsed_results.csv"
 
     results.touch()
-    usher_parsing(results, outfile)
+    usher_parsing(results, tmp_path)
 
     assert outfile.read_text() == "sequence_id,lineage,conflict,usher_note\n"
 
 
 def test_usher_parsing_malformed_input(tmp_path):
     results = tmp_path / "results.txt"
-    outfile = tmp_path / "parsed_results.csv"
 
     results.write_text("invalid_line_without_tab\n")
     with pytest.raises(SystemExit) as e:  # Or the expected exception
-        usher_parsing(results, outfile)
+        usher_parsing(results, tmp_path)
     assert e.value.code == -12
 
 

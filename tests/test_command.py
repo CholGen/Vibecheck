@@ -1,4 +1,6 @@
+import os
 import shutil
+import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -6,9 +8,12 @@ import pytest
 
 from phonebook.command import main
 
-expected_resultA = "sequence_id,lineage,conflict,usher_note\nAfrica|KEN|ERR037738|T10|2010-01-01,T10,0.0,Usher placements: T10(1/1)\n"
-expected_resultB = "sequence_id,lineage,conflict,usher_note\nAfrica|ZAF|ERS14903183|T15|2023-01-01,T15,0.0,Usher placements: T15(1/1)\n"
-expected_resultC = "sequence_id,lineage,conflict,usher_note\nAfrica|TZA|SAMN19110428|T13|2017-01-01,T13,0.0,Usher placements: T13(1/1)\n"
+expected_resultAll = (
+    "sequence_id,qc_status,qc_notes,lineage,conflict,usher_note\n"
+    "Africa|KEN|ERR037738|T10|2010-01-01,pass,Ambiguous_content:0.01%,T10,0.0,Usher placements: T10(1/1)\n"
+    "Africa|TZA|SAMN19110428|T13|2017-01-01,pass,Ambiguous_content:0.01%,T13,0.0,Usher placements: T13(1/1)\n"
+    "Africa|ZAF|ERS14903183|T15|2023-01-01,pass,Ambiguous_content:0.04%,T15,0.0,Usher placements: T15(1/1)\n"
+)
 
 
 @patch("argparse.ArgumentParser.print_help")
@@ -41,48 +46,21 @@ def test_odd_threads():
 
 
 @pytest.fixture
-def inputA():
-    outdir = Path("tests/inputA")
+def inputAll():
+    print(os.getcwd())
+    outdir = Path("tests/inputA/")
+    outdir.mkdir(exist_ok=True)
+    input_alignment = outdir / "all.fasta"
+    subprocess.run(
+        f"cat tests/example_fasta/*.fasta > {input_alignment}",
+        shell=True,
+    )
     sys_argv = [
         "--outdir",
         str(outdir),
         "--threads",
         "4",
-        "tests/example_fasta/ERR037738.fasta",
-    ]
-    main(sys_argv)
-    yield outdir
-
-    if outdir.exists():
-        shutil.rmtree(outdir)
-
-
-@pytest.fixture
-def inputB():
-    outdir = Path("tests/inputB")
-    sys_argv = [
-        "--outdir",
-        str(outdir),
-        "--threads",
-        "4",
-        "tests/example_fasta/ERS14903183.fasta",
-    ]
-    main(sys_argv)
-    yield outdir
-
-    if outdir.exists():
-        shutil.rmtree(outdir)
-
-
-@pytest.fixture
-def inputC():
-    outdir = Path("tests/inputC")
-    sys_argv = [
-        "--outdir",
-        str(outdir),
-        "--threads",
-        "4",
-        "tests/example_fasta/SAMN19110428.fasta",
+        str(input_alignment),
     ]
     main(sys_argv)
     yield outdir
@@ -111,22 +89,10 @@ def inputA_notemp():
 
 # Try to refactor this in the future.
 # @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
-def test_input(inputA):
-    results = inputA / "lineage_report.csv"
+def test_input(inputAll):
+    results = inputAll / "lineage_report.csv"
     assert results.exists()
-    assert results.read_text() == expected_resultA
-
-
-def test_inputB(inputB):
-    results = inputB / "lineage_report.csv"
-    assert results.exists()
-    assert results.read_text() == expected_resultB
-
-
-def test_inputC(inputC):
-    results = inputC / "lineage_report.csv"
-    assert results.exists()
-    assert results.read_text() == expected_resultC
+    assert results.read_text() == expected_resultAll
 
 
 def test_inputA_notemp_exists(inputA_notemp):
@@ -138,6 +104,8 @@ def test_inputA_notemp_exists(inputA_notemp):
         "alignment.fasta",
         "sequences.aln.vcf",
         "sequences.withref.fa",
+        "alignment.filtered.fasta",
+        "seq_status.csv",
         "clades.txt",
     ]
     for file in expected_files:

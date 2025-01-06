@@ -2,7 +2,6 @@ import argparse
 import multiprocessing
 import os
 import sys
-import time
 from importlib.resources import files
 
 from phonebook.src import qc, tasks
@@ -51,6 +50,13 @@ def main(sysargs=None):
         action="store",
         default=".",
         help="Output directory. Default: current working directory",
+    )
+    parser.add_argument(
+        "-m",
+        "--max-ambiquity",
+        type=float,
+        default=0.3,
+        help="Maximum number of ambiguous bases a sequence can have before its filtered from the analysis. Default: 0.3",
     )
     parser.add_argument(
         "--outfile",
@@ -108,6 +114,13 @@ def main(sysargs=None):
         sys.exit(-98)
     threads = args.threads
 
+    max_ambiquity = args.max_ambiquity
+    if args.max_ambiquity > 100:
+        console.log("Error: Maximum ambiquity must represent a fraction.")
+        sys.exit(-97)
+    elif args.max_ambiquity > 1:  # Allow fractions as an integer.
+        max_ambiquity /= 100.0
+
     # Checking input files
     query_file = qc.check_query_file(args.query)
     protobuf_file = qc.check_tree(args.usher_tree)
@@ -126,14 +139,22 @@ def main(sysargs=None):
         console.log("Aligning sequences to reference")
         aln = tasks.align_sequences(query_file, REFERENCE, tempdir, threads)
 
+        console.log(
+            f"Filtering sequences with greater than {max_ambiquity:.0%} ambiguous bases"
+        )
+        qc_stats, filtered_aln = tasks.sequence_qc(aln, tempdir, max_ambiquity)
+
         console.log("Converting alignment to VCF")
-        vcf = tasks.convert_to_vcf(aln, REFERENCE, tempdir)
+        vcf = tasks.convert_to_vcf(filtered_aln, REFERENCE, tempdir)
 
         console.log("Placing sequences into global phylogeny")
         results = tasks.classify_usher(vcf, protobuf_file, tempdir, threads)
 
         console.log("Parsing Usher results")
-        tasks.usher_parsing(results, outfile)
+        parsed_results = tasks.usher_parsing(results, tempdir)
+
+        console.log(f"Writing results to {outfile}")
+        tasks.combine_results(parsed_results, qc_stats, outfile)
 
     console.rule("[bold] Complete!")
     console.print(f"Lineage assignments are available in {outfile}.")
