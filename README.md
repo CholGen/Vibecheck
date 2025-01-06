@@ -116,7 +116,7 @@ mamba activate vibecheck
 ```commandline
 vibecheck [query]
 ```
-Where `[query]` is a the name of your input fasta file. 
+Where `[query]` is the name of your input fasta file. 
 The query file can contain as many sequences as you would like to be classified.
 
 
@@ -155,27 +155,29 @@ options:
 # Output
 A successful run of Vibecheck will output a CSV file, named by default `lineage_report.csv`.
 
-This output file contains 4 columns with a row for each sequence found in the query input file.
+This output file contains 6 columns with a row for each sequence found in the query input file.
 - The `sequence_id` column contains the name of each provided sequence.
+- The `qc_status` column indicates whether a sequenced passed or failed quality control.
+- The `qc_notes` columns summarizes the results the quality control process.
 - The `lineage` column contains the most likely lineage assigned to a sequence.
 - The `conflict` column contains a value reflecting how uncertain the assignment of a sequence is. 
 A value of 0 indicates, given the current phylogenetic tree, there is only a single lineage that the sequence could be assigned to, while a value above 0 indicates that number of lineages that a sequence could be assigned to.
-- The `usher_note` column contains the placements of 
+- The `usher_note` column summarizes the placement(s) of a sequences. 
 
 > [!NOTE]
 > The assignment of a sequence is sensitive to missing data at key sites, recombination, and other factors. 
 > Therefore, caution should be taken in interpreting the results of Vibecheck. 
-> All results should be confirmed with a complete phylogenetic reconstruction involing quality and compeleteness filtering, and recombination masking.
+> All results should be confirmed with a complete phylogenetic reconstruction involving quality and compeleteness filtering, and recombination masking.
 > We recommend the [bacpage phylogeny](https://github.com/CholGen/bacpage) (available on [Terra](https://dockstore.org/workflows/github.com/CholGen/bacpage/bacpage-phylogeny) as well) pipeline for this.
 
 ## Example output
 
-| sequence_id | lineage | conflict | usher_note                                |
-|-------------|---------|----------|-------------------------------------------|
-| _SequenceA_ | T13     | 0.0      | Usher placements: T13(1/1)                |
-| _SequenceB_ | T15     | 0.0      | Usher placements: T15(1/1)                |
-| _SequenceC_ | T12     | 0.0      | Usher placements: T12(8/8)                |
-| _SequenceD_ | T13     | 0.33333  | Usher placements: T13(2/3) UNDEFINED(1/3) |
+| sequence_id | qc_status | qc_notes                | lineage | conflict | usher_note                                |
+|-------------|-----------|-------------------------|---------|----------|-------------------------------------------|
+| _SequenceA_ | pass      | Ambiguous_content:0.01% | T13     | 0.0      | Usher placements: T13(1/1)                |
+| _SequenceB_ | pass      | Ambiguous_content:0.03% | T15     | 0.0      | Usher placements: T15(1/1)                |
+| _SequenceC_ | pass      | Ambiguous_content:0.02% | T12     | 0.0      | Usher placements: T12(8/8)                |
+| _SequenceD_ | pass      | Ambiguous_content:0.13% | T13     | 0.33333  | Usher placements: T13(2/3) UNDEFINED(1/3) |
 
 In the example above, _SequenceA_ and _SequenceB_ each have a single parsimoneous placement in the phylogeny and are therefore assigned T13 and T15, respectively, with a conflict value of 0 indicating high certainty.
 _SequenceC_ has eight parsimoneous placements in the phylogeny (as indicated by the `(8/8)` in the `usher_note` column). 
