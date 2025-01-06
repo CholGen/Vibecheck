@@ -6,8 +6,6 @@
     </picture>
 </p>
 
-# Vibecheck
-
 This repository contains an easy-to-use program to assign O1 *Vibrio cholerae* genomes to [canonical lineages](https://doi.org/10.1126/science.aad5901) using phylogenetic placement.  
 
 ## Table of Contents
