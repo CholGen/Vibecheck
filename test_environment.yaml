@@ -1,0 +1,13 @@
+name: Killington
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python
+  - usher
+  - biopython
+  - minimap2
+  - rich
+  - gofasta
+  - pandas
+  - pytest

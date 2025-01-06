@@ -1,0 +1,36 @@
+name: Test pipeline quickly
+
+on:
+  pull_request:
+    paths-ignore:
+      - '.*'
+      - '.github/**'
+      - 'LICENSE'
+      - 'pyproject.toml'
+      - 'README.md'
+  push:
+    paths-ignore:
+      - '.*'
+      - '.github/**'
+      - 'LICENSE'
+      - 'pyproject.toml'
+      - 'README.md'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ "ubuntu-latest" ]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          cache-environment: true
+          environment-file: test_environment.yaml
+      - name: Run tests
+        run: micromamba run -n phonebook python -m pytest --rootdir=. . --junitxml=junit/test-results.xml
