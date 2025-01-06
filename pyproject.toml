@@ -27,16 +27,16 @@ dynamic = ["readme", "version"]
 
 [tool.setuptools]
 packages = [
-    "phonebook",
-    "phonebook.src",
-    "phonebook.resources"
+    "vibecheck",
+    "vibecheck.src",
+    "vibecheck.resources"
 ]
 
 [tool.setuptools.package-data]
 "*" = ["*.fasta", "*.pb", "*.smk"]
 
 [project.scripts]
-phonebook = "phonebook.command:main"
+vibecheck = "vibecheck.command:main"
 
 #[project.urls]
 #Homepage = "https://github.com/CholGen/bacpage"

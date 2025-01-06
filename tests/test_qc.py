@@ -37,18 +37,17 @@ def test_check_query_file_relative_path():
 
 
 def test_check_query_file_absolute_path():
-    # Please ignore my absolute path...
-    file = "/Users/natem/Documents/Code/Killington/tests/example_fasta/ERR037738.fasta"
-    result = check_query_file([file])
+    file = Path("tests/example_fasta/ERR037738.fasta").absolute()
+    result = check_query_file([str(file)])
     assert result == Path(file)
 
 
 def test_check_query_file_tilde_path():
-    # I don't want any comments about my file structure. I'm not sure how else to test
-    # this.
-    file = "~/Documents/Code/Killington/tests/example_fasta/ERR037738.fasta"
-    result = check_query_file([file])
-    assert result == Path(file).expanduser()
+    file = Path("tests/example_fasta/ERR037738.fasta")
+    home = Path.home()
+    file_home_relative = "~/" / file.absolute().relative_to(home.expanduser())
+    result = check_query_file([str(file_home_relative)])
+    assert result == Path(file_home_relative).expanduser()
 
 
 def test_check_tree_valid_file(tmp_path):
@@ -114,6 +113,8 @@ def test_setup_tempdir_writable_tempdir(tmp_path):
 
 
 def test_setup_tempdir_relative_path(tmp_path):
-    tempdir = "~/Documents/Code/Killington/tests/example_fasta/"
-    result = setup_tempdir(str(tempdir), Path(tempdir), False)
-    assert result == Path(tempdir).expanduser()
+    tempdir = Path("tests/example_fasta/")
+    home = Path.home()
+    tempdir_home_relative = "~/" / tempdir.absolute().relative_to(home.expanduser())
+    result = setup_tempdir(str(tempdir_home_relative), tempdir_home_relative, False)
+    assert result == Path(tempdir_home_relative).expanduser()
