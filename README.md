@@ -1,8 +1,8 @@
 <p align="center">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset=".github/logo_light.png">
-      <source media="(prefers-color-scheme: light)" srcset=".github/logo_dark.png">
-      <img alt="vibecheck" src=".github/logo_dark.png" width=500>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/vibecheck_logo_dark.png">
+      <source media="(prefers-color-scheme: light)" srcset=".github/vibecheck_logo_light.png">
+      <img alt="vibecheck" src=".github/vibecheck_logo_light.png" width=500>
     </picture>
 </p>
 
