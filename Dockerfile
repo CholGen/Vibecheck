@@ -19,7 +19,7 @@ RUN micromamba install -y -n base -f environment.yaml \
 # Specify path to gain access to conda environment without terminal model
 ENV PATH="/opt/conda/envs/pangolin/bin:/opt/conda/bin:/opt/conda/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER .github ./Vibecheck/
+COPY --chown=$MAMBA_USER:$MAMBA_USER . ./Vibecheck/
 WORKDIR /vibecheck/
 RUN pip install .
 RUN vibecheck -v
