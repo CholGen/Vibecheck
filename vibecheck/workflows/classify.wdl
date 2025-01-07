@@ -47,8 +47,8 @@ task vibecheck {
 
         vibecheck "~{query_fasta}" \
             --outdir . \
-            ~{"--usher-tree" + usher_tree} \
-            ~{"--max-ambiquity" + max_ambiquity}
+            ~{"--usher-tree " + usher_tree} \
+            ~{"--max-ambiquity " + max_ambiquity}
 
         python3 <<CODE
         import csv
