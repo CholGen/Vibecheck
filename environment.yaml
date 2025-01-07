@@ -10,3 +10,4 @@ dependencies:
   - snakemake-minimal
   - rich
   - gofasta
+  - pandas

@@ -12,13 +12,14 @@ LABEL license.url="https://github.com/watronfire/Vibecheck/blob/main/LICENSE"
 LABEL maintainer="Nathaniel L. Matteson"
 LABEL maintainer.email="nmatteson@bwh.harvard.edu"
 
+WORKDIR /home/mambauser/
 COPY --chown=$MAMBA_USER:$MAMBA_USER . ./vibecheck/
-WORKDIR /vibecheck/
+WORKDIR /home/mambauser/vibecheck/
 
 RUN micromamba install -y -n base -f environment.yaml \
     && micromamba clean --all --yes
 # Specify path to gain access to conda environment without terminal model
-ENV PATH="/opt/conda/envs/vibecheck/bin:/opt/conda/bin:/opt/conda/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PATH="/opt/conda/envs/base/bin:/opt/conda/bin:/opt/conda/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 RUN pip install .
 RUN vibecheck -v

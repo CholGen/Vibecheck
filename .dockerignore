@@ -12,5 +12,4 @@ vibecheck.egg-info/
 .gitattributes
 .gitignore
 Dockerfile
-environment.yaml
 test_environment.yaml
