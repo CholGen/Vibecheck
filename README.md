@@ -6,8 +6,6 @@
     </picture>
 </p>
 
-# Vibecheck
-
 This repository contains an easy-to-use program to assign O1 *Vibrio cholerae* genomes to [canonical lineages](https://doi.org/10.1126/science.aad5901) using phylogenetic placement.  
 
 ## Table of Contents
@@ -125,12 +123,14 @@ See [Output](#output) for a complete description of this file.
 
 ## Full usage options
 ```
-usage: phonebook [-h] [--usher-tree USHER_TREE] [-o OUTDIR] [--outfile OUTFILE] [--tempdir TEMPDIR] [--no-temp] [-t THREADS] [query ...]
+usage: vibecheck [-h] [--usher-tree USHER_TREE] [-o OUTDIR] [-m MAX_AMBIQUITY] [--outfile OUTFILE] [--tempdir TEMPDIR] [--no-temp] [-t THREADS]
+                 [-v]
+                 [query ...]
 
 ██╗   ██╗██╗██████╗ ███████╗ ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗
 ██║   ██║██║██╔══██╗██╔════╝██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝
-██║   ██║██║██████╔╝█████╗  ██║     ███████║█████╗  ██║     █████╔╝ 
-╚██╗ ██╔╝██║██╔══██╗██╔══╝  ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
+██║   ██║██║██████╔╝█████╗  ██║     ███████║█████╗  ██║     █████╔╝
+╚██╗ ██╔╝██║██╔══██╗██╔══╝  ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗
  ╚████╔╝ ██║██████╔╝███████╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
   ╚═══╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
 
@@ -145,11 +145,14 @@ options:
                         UShER Mutation Annotated Tree protobuf file to use instead of default tree
   -o OUTDIR, --outdir OUTDIR
                         Output directory. Default: current working directory
+  -m MAX_AMBIQUITY, --max-ambiquity MAX_AMBIQUITY
+                        Maximum number of ambiguous bases a sequence can have before its filtered from the analysis. Default: 0.3
   --outfile OUTFILE     Optional output file name. Default: lineage_report.csv
   --tempdir TEMPDIR     Specify where you want the temp stuff to go. Default: $TMPDIR
   --no-temp             Output all intermediate files, for dev purposes.
   -t THREADS, --threads THREADS
                         Number of threads to use when possible. Default: all available cores, 12 detected on this machine
+  -v, --version         Prints the version of Vibecheck and exits.
 ```
 
 # Output
