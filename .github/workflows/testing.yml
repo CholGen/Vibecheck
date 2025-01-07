@@ -1,5 +1,4 @@
-name: Test pipeline quickly
-
+name: Test the program
 on:
   pull_request:
     paths-ignore:

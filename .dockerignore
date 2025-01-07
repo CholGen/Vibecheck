@@ -1,0 +1,16 @@
+.github
+.git
+.pytest_cache
+.snakemake/
+tests/
+notebooks/
+build/
+vibecheck.egg-info/
+.dockstore.yml
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
+Dockerfile
+environment.yaml
+test_environment.yaml
