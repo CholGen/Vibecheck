@@ -3,6 +3,7 @@ workflows:
   - subclass: WDL
     primaryDescriptorPath: /vibecheck/workflows/classify.wdl
     name: vibecheck-lineage-assignment
+    topic: Rapid classification of cholera genomes using phylogenetic placement.
     authors:
       - name: Nathaniel L. Matteson
         email: nmatteson@bwh.harvard.edu
