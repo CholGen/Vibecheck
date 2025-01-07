@@ -153,7 +153,7 @@ def main(sysargs=None):
         console.log("Parsing Usher results")
         parsed_results = tasks.usher_parsing(results, tempdir)
 
-        console.log(f"Writing results to {outfile}")
+        console.log(f"Writing results")
         tasks.combine_results(parsed_results, qc_stats, outfile)
 
     console.rule("[bold] Complete!")
