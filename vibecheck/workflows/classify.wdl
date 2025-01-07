@@ -37,7 +37,7 @@ task vibecheck {
         File query_fasta
         File? usher_tree
         Float? max_ambiquity=0.3
-        String docker="dockerhub.com/watronfire/vibecheck:latest"
+        String docker="watronfire/vibecheck:latest"
     }
     Int disk_size = 16
     command <<<
@@ -68,7 +68,6 @@ task vibecheck {
         disks:  "local-disk " + disk_size + " HDD"
         disk: disk_size + " GB" # TES
         dx_instance_type: "mem1_ssd1_v2_x2"
-        maxRetries: 2
     }
     output {
         File lineage_report = "data/lineage_report.csv"
