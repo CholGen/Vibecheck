@@ -69,12 +69,12 @@ task vibecheck {
         dx_instance_type: "mem1_ssd1_v2_x2"
     }
     output {
-        File lineage_report = "data/lineage_report.csv"
-        String top_lineage  = read_string("data/LINEAGE")
-        Float conflict      = read_float("data/CONFLICT")
-        String usher_notes  = read_string("data/USHER_NOTE")
-        String pass_qc      = read_string("data/QC_STATUS")
-        String qc_notes     = read_string("data/QC_NOTES")
-        String version      = read_string("data/VERSION")
+        File lineage_report = "lineage_report.csv"
+        String top_lineage  = read_string("LINEAGE")
+        Float conflict      = read_float("CONFLICT")
+        String usher_notes  = read_string("USHER_NOTE")
+        String pass_qc      = read_string("QC_STATUS")
+        String qc_notes     = read_string("QC_NOTES")
+        String version      = read_string("VERSION")
     }
 }
