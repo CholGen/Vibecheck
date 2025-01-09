@@ -4,7 +4,7 @@ import os
 import sys
 from importlib.resources import files
 
-from vibecheck.src import qc, tasks
+from vibecheck.src import qc, usher_tasks
 from vibecheck.src.console import console
 from vibecheck import __version__
 
@@ -53,7 +53,7 @@ def main(sysargs=None):
     )
     parser.add_argument(
         "-m",
-        "--max-ambiquity",
+        "--max-ambiguity",
         type=float,
         default=0.3,
         help="Maximum number of ambiguous bases a sequence can have before its filtered from the analysis. Default: 0.3",
@@ -114,12 +114,12 @@ def main(sysargs=None):
         sys.exit(-98)
     threads = args.threads
 
-    max_ambiquity = args.max_ambiquity
-    if args.max_ambiquity > 100:
-        console.log("Error: Maximum ambiquity must represent a fraction.")
+    max_ambiguity = args.max_ambiguity
+    if args.max_ambiguity > 100:
+        console.log("Error: Maximum ambiguity must represent a fraction.")
         sys.exit(-97)
-    elif args.max_ambiquity > 1:  # Allow fractions as an integer.
-        max_ambiquity /= 100.0
+    elif args.max_ambiguity > 1:  # Allow fractions as an integer.
+        max_ambiguity /= 100.0
 
     # Checking input files
     query_file = qc.check_query_file(args.query)
@@ -137,24 +137,24 @@ def main(sysargs=None):
     console.rule("[bold] Classifying input")
     with console.status("Processing...", spinner="bouncingBall"):
         console.log("Aligning sequences to reference")
-        aln = tasks.align_sequences(query_file, REFERENCE, tempdir, threads)
+        aln = usher_tasks.align_sequences(query_file, REFERENCE, tempdir, threads)
 
         console.log(
-            f"Filtering sequences with greater than {max_ambiquity:.0%} ambiguous bases"
+            f"Filtering sequences with greater than {max_ambiguity:.0%} ambiguous bases"
         )
-        qc_stats, filtered_aln = tasks.sequence_qc(aln, tempdir, max_ambiquity)
+        qc_stats, filtered_aln = usher_tasks.sequence_qc(aln, tempdir, max_ambiguity)
 
         console.log("Converting alignment to VCF")
-        vcf = tasks.convert_to_vcf(filtered_aln, REFERENCE, tempdir)
+        vcf = usher_tasks.convert_to_vcf(filtered_aln, REFERENCE, tempdir)
 
         console.log("Placing sequences into global phylogeny")
-        results = tasks.classify_usher(vcf, protobuf_file, tempdir, threads)
+        results = usher_tasks.classify_usher(vcf, protobuf_file, tempdir, threads)
 
         console.log("Parsing Usher results")
-        parsed_results = tasks.usher_parsing(results, tempdir)
+        parsed_results = usher_tasks.usher_parsing(results, tempdir)
 
         console.log(f"Writing results")
-        tasks.combine_results(parsed_results, qc_stats, outfile)
+        usher_tasks.combine_results(parsed_results, qc_stats, outfile)
 
     console.rule("[bold] Complete!")
     console.print(f"Lineage assignments are available in {outfile}.")
