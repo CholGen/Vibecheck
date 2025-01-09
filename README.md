@@ -23,7 +23,7 @@ These lineages have been used to connect apparently disparate outbreaks, charact
 and suggested possible transmission routes of cholera within Africa. 
 As well, genomic differences between lineages might explain differences in severity and transmissibility observed between different outbreaks.
 Vibecheck enables the rapid assignment of sequences to these canonical lineages, as an alternative to a lengthy and 
-computationally intensive reconstruction of the global phylogeny.
+computationally intensive reconstruction of the global phylogeny. 
 
 # How it works
 > [!NOTE]
@@ -46,6 +46,10 @@ Any sequences that fail this check will not get assigned a lineage.
 3. Identifies SNP differences between each sequence and the reference (i.e. variants) and generates a VCF file summarizing the variants using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master) script.
 4. Places each sequence into a lineage-annotated phylogeny using [UShER](https://github.com/yatisht/usher), and records whether the placement is contained within a lineage.
 5. Parses the output of UShER, calculates the confidence in each lineage estimation, and produces a final lineage report.
+
+Validation of Vibecheck showed that it was >98% accurate in recapitulating the lineages of sequences left out of the guide tree.
+See the [calculate_accuracy](notebooks/calculate_accuracy.ipynb) notebook for the complete validation of the speed and accuracy of Vibecheck. 
+See also the [ambiguity_thresholding](notebooks/ambiquity_thresholding.ipynb) notebook for the empirical basis of our default maximum ambiguous parameter.
 
 # Installation
 1. Install `mamba` by running the following two command:
@@ -106,11 +110,11 @@ pip install .
 ```
 
 # Usage
-0. Activate the vibecheck conda environment:
+1. Activate the vibecheck conda environment:
 ```commandline
 mamba activate vibecheck
 ```
-1. Run
+2. Run
 ```commandline
 vibecheck [query]
 ```
@@ -120,6 +124,8 @@ The query file can contain as many sequences as you would like to be classified.
 
 This command will generate a CSV file (`lineage_report.csv`) containing the estimated lineages for each sequence in the query file. 
 See [Output](#output) for a complete description of this file.
+
+> [!ATTENTION]
 
 ## Full usage options
 ```
