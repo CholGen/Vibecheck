@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,6 +16,18 @@ from vibecheck.src.usher_tasks import (
     sequence_qc,
     usher_parsing,
 )
+
+
+def test_freyja_pipeline_dependencies():
+    required_tools = ["minimap2", "gofasta", "faToVcf", "usher"]
+    missing_tools = []
+
+    for tool in required_tools:
+        if not shutil.which(tool):
+            missing_tools.append(tool)
+
+    if missing_tools:
+        pytest.fail(f"Required tools not found in PATH: {', '.join( missing_tools )}")
 
 
 def test_run_command_success(tmp_path):
