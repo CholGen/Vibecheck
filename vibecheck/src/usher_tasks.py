@@ -14,6 +14,36 @@ OTHER_IUPAC = {"r", "y", "s", "w", "k", "m", "d", "h", "b", "v"}
 VALID_CHARACTERS = [{"a"}, {"c"}, {"g"}, {"t"}, {"n"}, OTHER_IUPAC, {"-"}, {"?"}]
 
 
+def run_pipeline(
+    query_file: Path,
+    protobuf_tree: Path,
+    reference: Path,
+    max_ambiguity: float,
+    tempdir: Path,
+    outfile: Path,
+    threads: int,
+):
+    console.log("Aligning sequences to reference")
+    aln = align_sequences(query_file, reference, tempdir, threads)
+
+    console.log(
+        f"Filtering sequences with greater than {max_ambiguity:.0%} ambiguous bases"
+    )
+    qc_stats, filtered_aln = sequence_qc(aln, tempdir, max_ambiguity)
+
+    console.log("Converting alignment to VCF")
+    vcf = convert_to_vcf(filtered_aln, reference, tempdir)
+
+    console.log("Placing sequences into global phylogeny")
+    results = classify_usher(vcf, protobuf_tree, tempdir, threads)
+
+    console.log("Parsing Usher results")
+    parsed_results = usher_parsing(results, tempdir)
+
+    console.log("Writing results")
+    combine_results(parsed_results, qc_stats, outfile)
+
+
 def align_sequences(
     query_sequences: Path, reference: Path, tempdir: Path, threads: int
 ) -> Path:
@@ -58,6 +88,17 @@ def align_sequences(
 
 
 def calculate_ambiquity(record: SeqRecord) -> float:
+    """Calculates the proportion of a sequence that is ambiguous characters. Here
+    ambiguous characters are anything besides ATCG.
+
+    Parameters
+    ----------
+    record: Bio.SeqRecord.SeqRecord
+
+    Returns
+    -------
+    float
+    """
     seq = record.seq.lower()
     seq_length = len(seq)
     counts = []

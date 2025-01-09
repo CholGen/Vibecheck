@@ -1,11 +1,96 @@
 import sys
 import tempfile
 from pathlib import Path
+from typing import Tuple
 
 from vibecheck.src.console import console
 
 
-def check_query_file(files: list[str]) -> Path:
+def check_threads(requested: int, threads: int) -> int:
+    """Checks whether the requested number of threads is possible.
+    Exits if not possible.
+
+    Parameters
+    ----------
+    requested: int
+    threads: int
+        Number of cores computer has access to.
+
+    Returns
+    -------
+    int
+        Number of threads to use.
+    """
+    if requested > threads:
+        console.log(
+            f"Error: Cannot request more cores than your computer has [{threads}]."
+        )
+        sys.exit(-99)
+    elif requested < 1:
+        console.log("Error: Must request at least one core using the --threads option.")
+        sys.exit(-98)
+    return requested
+
+
+def check_parse_float_fraction(value: float, name: str) -> float:
+    """Conforms fraction value is between 0 and 1. Exits if parsing is not possible.
+
+    Parameters
+    ----------
+    value: float
+        Putative value to check.
+    name: str
+        Name of the value, to be used in error message.
+
+    Returns
+    -------
+    float
+        Value between 0 and 1.
+    """
+    if value < 0:
+        console.log("Error: {name} cannot be negative.")
+        sys.exit(-97)
+    elif value > 100:
+        console.log("Error: {name} must represent a fraction")
+        sys.exit(-97)
+    elif value > 1:
+        value /= 100
+    return value
+
+
+def check_max_ambiguity(max_ambiguity: float) -> float:
+    """Checks maximum abiguity value can be parsed to a fraction.
+
+    Parameters
+    ----------
+    max_ambiguity: float
+
+    Returns
+    -------
+    float
+    """
+    return_value = check_parse_float_fraction(max_ambiguity, "Maximum ambiguity")
+    return return_value
+
+
+def check_subsampling_frac(subsampling_fraction: float) -> float:
+    """Checks subsampling value can be parsed to a fraction.
+
+    Parameters
+    ----------
+    subsampling_fraction: float
+
+    Returns
+    -------
+    float
+    """
+    return_value = check_parse_float_fraction(
+        subsampling_fraction, "Subsampling fraction"
+    )
+    return return_value
+
+
+def check_query_file(files: list[str]) -> Tuple[Path, bool]:
     """Confirms the existance of a single query file.
     Parameters
     ----------
@@ -16,6 +101,8 @@ def check_query_file(files: list[str]) -> Path:
     -------
     Path
         Location of input fasta file.
+    bool
+        Indicates whether the input represents a fasta file of consensus genomes or paired-end fastq files.
     """
     if len(files) > 1:
         console.log(
@@ -32,7 +119,7 @@ def check_query_file(files: list[str]) -> Path:
             sys.exit(-2)
         console.print(f"Using query file: {file_path}")
 
-        return file_path
+        return file_path, True
 
     except IndexError:
         console.log(f"Error: No query file supplied: {files}\nPlease supply one.")
@@ -64,6 +151,31 @@ def check_tree(usher_tree: str) -> Path:
 
     console.print(f"Using Usher tree: {usher_path}")
     return usher_path
+
+
+def check_barcodes(barcodes: str) -> Path:
+    """Confirms the existance of barcodes.
+
+    Parameters
+    ----------
+    barcodes: str
+        Puntative location of barcodes.
+
+    Returns
+    -------
+    Path
+        Location of confirmed barcodes.
+    """
+    barcodes_path = Path(barcodes)
+    if barcodes.startswith("~"):
+        barcodes_path = barcodes_path.expanduser()
+    if not barcodes_path.exists():
+        console.log(
+            f"Error: {barcodes} was not found. Please check path supplied to `--barcodes`."
+        )
+        sys.exit(-9)
+    console.print(f"Using lineage barcodes: {barcodes_path}")
+    return barcodes_path
 
 
 def setup_outdir(outdir: str, cwd: str) -> Path:

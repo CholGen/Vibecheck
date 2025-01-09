@@ -2,13 +2,64 @@ from pathlib import Path
 
 import pytest
 
-from vibecheck.src.qc import check_query_file, check_tree, setup_outdir, setup_tempdir
+from vibecheck.src.qc import (
+    check_barcodes,
+    check_parse_float_fraction,
+    check_query_file,
+    check_threads,
+    check_tree,
+    setup_outdir,
+    setup_tempdir,
+)
+
+
+def test_parse_fraction_valid():
+    value = 0.3
+    got = check_parse_float_fraction(0.3, "foo")
+    assert got == value
+
+
+def test_parse_fraction_value_int():
+    value = 30
+    got = check_parse_float_fraction(value, "foo")
+    assert got == 0.3
+
+
+def test_parse_fraction_invalid():
+    value = 1204123
+    with pytest.raises(SystemExit) as e:
+        check_parse_float_fraction(value, "foo")
+    assert e.value.code != 0
+
+
+def test_parse_fraction_negative():
+    value = -0.3
+    with pytest.raises(SystemExit) as e:
+        check_parse_float_fraction(value, "foo")
+    assert e.value.code != 0
+
+
+def test_check_threads_valid():
+    got = check_threads(1, 4)
+    assert got == 1
+
+
+def test_check_threads_invalid():
+    with pytest.raises(SystemExit) as e:
+        check_threads(10, 3)
+    assert e.value.code != 0
+
+
+def test_check_threads_negative():
+    with pytest.raises(SystemExit) as e:
+        check_threads(-42, 10)
+    assert e.value.code != 0
 
 
 def test_check_query_file_single_file(tmp_path):
     file = tmp_path / "query.fasta"
     file.touch()  # Create a dummy file
-    result = check_query_file([str(file)])
+    result, _ = check_query_file([str(file)])
     assert result == file
 
 
@@ -32,13 +83,13 @@ def test_check_query_file_empty_list():
 
 def test_check_query_file_relative_path():
     file = "tests/example_fasta/ERR037738.fasta"
-    result = check_query_file([file])
+    result, _ = check_query_file([file])
     assert result == Path(file)
 
 
 def test_check_query_file_absolute_path():
     file = Path("tests/example_fasta/ERR037738.fasta").absolute()
-    result = check_query_file([str(file)])
+    result, _ = check_query_file([str(file)])
     assert result == Path(file)
 
 
@@ -46,7 +97,7 @@ def test_check_query_file_tilde_path():
     file = Path("tests/example_fasta/ERR037738.fasta")
     home = Path.home()
     file_home_relative = "~/" / file.absolute().relative_to(home.expanduser())
-    result = check_query_file([str(file_home_relative)])
+    result, _ = check_query_file([str(file_home_relative)])
     assert result == Path(file_home_relative).expanduser()
 
 
@@ -61,6 +112,19 @@ def test_check_tree_nonexistent_file():
     with pytest.raises(SystemExit) as e:
         check_tree("nonexistent.pb")
     assert e.value.code == -4
+
+
+def test_check_barcodes_valid_file(tmp_path):
+    tree = tmp_path / "barcodes.feather"
+    tree.touch()  # Create a dummy file
+    result = check_barcodes(str(tree))
+    assert result == tree
+
+
+def test_check_barcodes_nonexistent_file():
+    with pytest.raises(SystemExit) as e:
+        check_barcodes("nonexistent.feather")
+    assert e.value.code != 0
 
 
 def test_setup_outdir_existing_dir(tmp_path):
