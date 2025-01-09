@@ -1,8 +1,7 @@
 import sys
 from pathlib import Path
-import subprocess
 import re
-from typing import Tuple, Union
+from typing import Tuple
 import pandas as pd
 
 from Bio import SeqIO
@@ -60,19 +59,19 @@ def align_sequences(
 
 def calculate_ambiquity(record: SeqRecord) -> float:
     seq = record.seq.lower()
-    l = len(seq)
+    seq_length = len(seq)
     counts = []
 
     for v in VALID_CHARACTERS:
         counts.append(sum(map(lambda x: seq.count(x), v)))
-    invalid_nucleotides = l - sum(counts)
+    invalid_nucleotides = seq_length - sum(counts)
 
     if invalid_nucleotides > 0:
         console.log(
             f"Warning: Invalid characters in sequence {record.id}. Might not be a valid nucleotide sequence."
         )
 
-    return 1 - (sum(counts[:4]) / l)
+    return 1 - (sum(counts[:4]) / seq_length)
 
 
 def sequence_qc(
@@ -124,12 +123,12 @@ def sequence_qc(
 
 
 def convert_to_vcf(aln: Path, reference: Path, tempdir: Path) -> Path:
-    """Converts a multisequence alignment in FASTA format to VCF format.
+    """Converts a multi-sequence alignment in FASTA format to VCF format.
 
     Parameters
     ----------
     aln: Path
-        Location of FASTA file containing multisequence alignment.
+        Location of FASTA file containing multi-sequence alignment.
     reference: Path
         Location of FASTA file containing reference sequence.
     tempdir: Path

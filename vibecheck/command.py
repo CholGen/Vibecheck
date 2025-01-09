@@ -108,9 +108,7 @@ def main(sysargs=None):
         )
         sys.exit(-99)
     elif args.threads < 1:
-        console.log(
-            f"Error: Must request at least one core using the --threads option."
-        )
+        console.log("Error: Must request at least one core using the --threads option.")
         sys.exit(-98)
     threads = args.threads
 
@@ -153,7 +151,7 @@ def main(sysargs=None):
         console.log("Parsing Usher results")
         parsed_results = usher_tasks.usher_parsing(results, tempdir)
 
-        console.log(f"Writing results")
+        console.log("Writing results")
         usher_tasks.combine_results(parsed_results, qc_stats, outfile)
 
     console.rule("[bold] Complete!")

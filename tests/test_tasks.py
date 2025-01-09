@@ -27,7 +27,7 @@ def test_freyja_pipeline_dependencies():
             missing_tools.append(tool)
 
     if missing_tools:
-        pytest.fail(f"Required tools not found in PATH: {', '.join( missing_tools )}")
+        pytest.fail(f"Required tools not found in PATH: {', '.join(missing_tools)}")
 
 
 def test_run_command_success(tmp_path):
