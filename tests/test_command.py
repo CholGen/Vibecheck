@@ -87,8 +87,6 @@ def inputA_notemp():
         shutil.rmtree(outdir)
 
 
-# Try to refactor this in the future.
-# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
 def test_input(inputAll):
     results = inputAll / "lineage_report.csv"
     assert results.exists()
@@ -111,3 +109,34 @@ def test_inputA_notemp_exists(inputA_notemp):
     for file in expected_files:
         file_path = inputA_notemp / file
         assert file_path.exists()
+
+
+@pytest.fixture
+def inputFreyha():
+    outdir = Path("tests/inputFreyja")
+    outdir.mkdir(exist_ok=True)
+    sys_argv = [
+        "--outdir",
+        str(outdir),
+        "--threads",
+        "4",
+        "tests/example_fastqs/OUG-1858.subsample.1.fastq.gz",
+        "tests/example_fastqs/OUG-1858.subsample.2.fastq.gz",
+    ]
+    main(sys_argv)
+    yield outdir
+
+    if outdir.exists():
+        shutil.rmtree(outdir)
+
+@pytest.mark.skip(reason="Input files are too large")
+def test_Freyja_pipeline(inputFreyha):
+    results = inputFreyha / "lineage_report.csv"
+
+    expected_result = (
+        "sequence_id,lineage,confidence,freyja_notes\n"
+        "foo,T13,1.000,Freyja results: T13(100.0%)\n"
+    )
+
+    assert results.exists()
+    assert results.read_text() == expected_result

@@ -34,6 +34,6 @@ jobs:
       - uses: mamba-org/setup-micromamba@v1
         with:
           cache-environment: true
-          environment-file: test_environment.yaml
+          environment-file: environment.yaml
       - name: Run tests
         run: micromamba run -n vibecheck python -m pytest --rootdir=. . --junitxml=junit/test-results.xml

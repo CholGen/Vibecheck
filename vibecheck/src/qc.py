@@ -1,7 +1,7 @@
 import sys
 import tempfile
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from vibecheck.src.console import console
 
@@ -90,40 +90,95 @@ def check_subsampling_frac(subsampling_fraction: float) -> float:
     return return_value
 
 
-def check_query_file(files: list[str]) -> Tuple[Path, bool]:
-    """Confirms the existance of a single query file.
+def check_query_file(
+    file_paths: list[str],
+) -> Tuple[Union[Path, Tuple[Path, Path]], bool]:
+    """Validates a list of sequence file paths and determines if they represent FASTA or FASTQ files.
+
     Parameters
     ----------
-    files: list[str]
-        list of input files to check.
+    file_paths : List[str]
+        List of file paths (relative or absolute) to sequence files
 
     Returns
     -------
-    Path
-        Location of input fasta file.
-    bool
-        Indicates whether the input represents a fasta file of consensus genomes or paired-end fastq files.
+    Tuple[bool, Union[Path, Tuple[Path, Path]]]
+        First element is either:
+        - A single Path object for FASTA file
+        - A tuple of 2 Path objects for FASTQ files
+        Second element is True if the usher pipeline should be used to classify sequences in a fasta file, or false if
+        the freyja pipeline should be used to classify reads in fastq files.
+
+    Raises
+    ------
+    SystemExit
+        If validation fails due to:
+        - Empty input list
+        - Mix of FASTA and FASTQ files
+        - Multiple FASTA files
+        - More than 2 FASTQ files
+        - Files don't exist
     """
-    if len(files) > 1:
-        console.log(
-            f"[bold red]Error: Too many query (input) fasta files supplied: "
-            f"{files}\nPlease supply one only."
-        )
-        sys.exit(-1)
-    try:
-        file_path = Path(files[0])
-        if files[0].startswith("~"):
-            file_path = file_path.expanduser()
-        if not file_path.exists():
-            console.log(f"Error: No such file: {file_path}")
-            sys.exit(-2)
-        console.print(f"Using query file: {file_path}")
-
-        return file_path, True
-
-    except IndexError:
-        console.log(f"Error: No query file supplied: {files}\nPlease supply one.")
+    if not file_paths:
+        console.log("Error: No query file supplied. Please supply one.")
         sys.exit(-3)
+
+    # Expand and validate all paths
+    expanded_paths = set()
+    for file_path in file_paths:
+        path = Path(file_path).expanduser().resolve()
+        if not path.exists():
+            console.log(f"Error: query file does not exist: {path}")
+            sys.exit(-2)
+        expanded_paths.add(path)
+
+    # Define valid extensions
+    fasta_extensions = {".fasta", ".fa", ".fasta.gz", ".fa.gz"}
+    fastq_extensions = {".fastq", ".fq", ".fastq.gz", ".fq.gz"}
+
+    # Check file extensions
+    fasta_files = {
+        path
+        for path in expanded_paths
+        if any(str(path).lower().endswith(ext) for ext in fasta_extensions)
+    }
+    fastq_files = {
+        path
+        for path in expanded_paths
+        if any(str(path).lower().endswith(ext) for ext in fastq_extensions)
+    }
+
+    # Validate file combinations
+    if fasta_files and fastq_files:
+        console.log("Error: Cannot mix FASTA and FASTQ files for query")
+        sys.exit(-4)
+
+    if len(fasta_files) > 1:
+        console.log(
+            f"Error: More than 1 fasta file provided: {fasta_files}. Please concatenate fasta files or supply only one."
+        )
+        sys.exit(-5)
+
+    if len(fastq_files) > 2:
+        console.log(f"Error: More than 2 fastq files provided: {fastq_files}")
+        sys.exit(-6)
+
+    if len(expanded_paths) != len(fasta_files) + len(fastq_files):
+        invalid_files = expanded_paths - (fasta_files | fastq_files)
+        console.log(
+            f"Error: File extensions not recognized: {', '.join( str( p ) for p in invalid_files )}. Only fasta ({fasta_extensions}) and fastq ({fastq_extensions}) files are recognized."
+        )
+        sys.exit(-7)
+
+    # Return tuple of (is_fasta, file_paths)
+    if fasta_files:
+        use_file = next(iter(fasta_files))
+        console.print(f"Using query fasta file: {str(use_file)}")
+        return use_file, True  # Return single Path for FASTA
+    else:
+        use_file = tuple(sorted(fastq_files))
+        console.print(f"Using query fastq files: {list(map(str,use_file))}")
+        return use_file, False  # Return tuple of Paths for FASTQ
 
 
 def check_tree(usher_tree: str) -> Path:

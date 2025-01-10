@@ -63,10 +63,15 @@ def test_check_query_file_single_file(tmp_path):
     assert result == file
 
 
-def test_check_query_file_multiple_files():
+def test_check_query_file_multiple_files(tmp_path):
+    fileA = tmp_path / "file1.fasta"
+    fileB = tmp_path / "file2.fasta"
+    fileA.touch()
+    fileB.touch()
+
     with pytest.raises(SystemExit) as e:
-        check_query_file(["file1.fasta", "file2.fasta"])
-    assert e.value.code == -1
+        check_query_file([str(fileA), str(fileB)])
+    assert e.value.code == -5
 
 
 def test_check_query_file_nonexistent_file():
@@ -84,7 +89,7 @@ def test_check_query_file_empty_list():
 def test_check_query_file_relative_path():
     file = "tests/example_fasta/ERR037738.fasta"
     result, _ = check_query_file([file])
-    assert result == Path(file)
+    assert result == Path(file).absolute()
 
 
 def test_check_query_file_absolute_path():
@@ -99,6 +104,80 @@ def test_check_query_file_tilde_path():
     file_home_relative = "~/" / file.absolute().relative_to(home.expanduser())
     result, _ = check_query_file([str(file_home_relative)])
     assert result == Path(file_home_relative).expanduser()
+
+
+def test_check_query_file_example():
+    tests = (
+        (["fasta"], ["fasta", True]),
+        (["fq.gz", "fq.gz"], [["fq.gz", "fq.gz"], False]),
+        (["fastq.gz", "fastq.gz"], [["fastq.gz", "fastq.gz"], False]),
+        (["fasta", "fastq.gz"], ["Error"]),
+        (["fastq.gz", "fastq.gz", "fastq.gz"], ["Error"]),
+    )
+
+
+def test_check_query_file_detect_fasta(tmp_path):
+    file = tmp_path / "query.fasta"
+    file.touch()
+    result, use_usher = check_query_file([str(file)])
+    assert result == file
+    assert use_usher
+
+
+def test_check_query_file_dectect_fastq(tmp_path):
+    fileA = tmp_path / "read1.fastq.gz"
+    fileB = tmp_path / "read2.fastq.gz"
+    fileA.touch()
+    fileB.touch()
+
+    result, use_usher = check_query_file([str(fileA), str(fileB)])
+    assert result == (fileA, fileB)
+    assert not use_usher
+
+
+def test_check_query_file_dectect_fq(tmp_path):
+    fileA = tmp_path / "read1.fq.gz"
+    fileB = tmp_path / "read2.fq.gz"
+    fileA.touch()
+    fileB.touch()
+
+    result, use_usher = check_query_file([str(fileA), str(fileB)])
+    assert result == (fileA, fileB)
+    assert not use_usher
+
+
+def test_check_query_file_error_mixed_type(tmp_path):
+    fileA = tmp_path / "read1.fastq.gz"
+    fileB = tmp_path / "reads.fasta"
+    fileA.touch()
+    fileB.touch()
+
+    with pytest.raises(SystemExit) as e:
+        result, use_usher = check_query_file([str(fileA), str(fileB)])
+    assert e.value.code == -4
+
+
+def test_check_query_file_error_too_many_fastqs(tmp_path):
+    fileA = tmp_path / "read1.fastq.gz"
+    fileB = tmp_path / "read2.fastq.gz"
+    fileC = tmp_path / "read3.fastq.gz"
+    fileA.touch()
+    fileB.touch()
+    fileC.touch()
+
+    with pytest.raises(SystemExit) as e:
+        result, use_usher = check_query_file([str(fileA), str(fileB), str(fileC)])
+    assert e.value.code == -6
+
+
+def test_check_query_file_error_missing_fastq(tmp_path):
+    fileA = tmp_path / "read1.fastq.gz"
+    fileB = tmp_path / "read2.fastq.gz"
+    fileA.touch()
+
+    with pytest.raises(SystemExit) as e:
+        result, use_usher = check_query_file([str(fileA), str(fileB)])
+    assert e.value.code == -2
 
 
 def test_check_tree_valid_file(tmp_path):

@@ -2,8 +2,44 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+import numpy as np
+
 from vibecheck.src.utilities import run_command
 from vibecheck.src.console import console
+
+
+def run_pipeline(
+    reads: Tuple[Path, Path],
+    reference: Path,
+    barcodes: Path,
+    subsample_fraction: float,
+    no_subsample: bool,
+    outfile: Path,
+    tempdir: Path,
+    threads: int,
+) -> None:
+
+    if no_subsample:
+        console.log("Aligning reads to reference")
+        alignment = align_reads(*reads, reference, tempdir)
+    else:
+        console.log(f"Sampling {subsample_fraction:.0%} of reads for classification")
+        sub_read1, sub_read2 = downsample_reads(*reads, tempdir, subsample_fraction)
+
+        console.log("Aligning reads to reference")
+        alignment = align_reads(sub_read1, sub_read2, reference, tempdir)
+
+    console.log("Calculating depth of coverage across reference genome.")
+    depth = generate_depth(alignment, reference, tempdir)
+
+    console.log("Calling variants between reads and reference.")
+    variants_filled = call_variants(alignment, reference, tempdir)
+
+    console.log("Calculating relative lineage abundances using Freyja.")
+    freyja_results = freyja_demix(variants_filled, depth, barcodes, tempdir)
+
+    console.log("Parsing Freyja results.")
+    parse_freyja_results(freyja_results, outfile)
 
 
 def downsample_reads(
@@ -50,17 +86,17 @@ def downsample_reads(
     return sub_read1, sub_read2
 
 
-def align_reads(reference: Path, read1: Path, read2: Path, tempdir: Path) -> Path:
+def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path) -> Path:
     """Aligns reads to a reference using `minimap2` and processes with `samtools`.
 
     Parameters
     ----------
-    reference : Path
-        Location of FASTA file containing the reference sequence.
     read1 : Path
         Location of fastq.gz file contain first set of reads.
     read2 : Path
         Location of fastq.gz file contain second set of reads.
+    reference : Path
+        Location of FASTA file containing the reference sequence.
     tempdir : Path
         Location of temporary directory.
 
@@ -84,15 +120,15 @@ def align_reads(reference: Path, read1: Path, read2: Path, tempdir: Path) -> Pat
     return alignment
 
 
-def generate_depth(reference: Path, alignment: Path, tempdir: Path) -> Path:
+def generate_depth(alignment: Path, reference: Path, tempdir: Path) -> Path:
     """Generates depth information from the alignment file using `samtools mpileup`.
 
     Parameters
     ----------
-    reference : Path
-        Location of FASTA file containing reference sequence.
     alignment : Path
         Location of sorted and indexed BAM file containing aligned reads.
+    reference : Path
+        Location of FASTA file containing reference sequence.
     tempdir : Path
         Location of temporary directory.
 
@@ -113,16 +149,16 @@ def generate_depth(reference: Path, alignment: Path, tempdir: Path) -> Path:
 
 
 def call_variants(
-    reference: Path, alignment: Path, tempdir: Path, threads: int = 4
+    alignment: Path, reference: Path, tempdir: Path, threads: int = 4
 ) -> Path:
     """Calls variants from the alignment file using bcftools.
 
     Parameters
     ----------
-    reference : Path
-        Location of FASTA file containing reference sequence.
     alignment : Path
         Location of BAM file containing alignment of reads.
+    reference : Path
+        Location of FASTA file containing reference sequence.
     tempdir : Path
         Location of temporary directory.
     threads : int, optional
@@ -183,3 +219,54 @@ def freyja_demix(
         console.log(f"Freyja output {freyja_output} does not exist. Check {tempdir}.")
         sys.exit(-66)
     return freyja_output
+
+
+def parse_freyja_results(freyja_results: Path, outfile: Path) -> None:
+    """Parses Freyja lineage abundance results from a text file. Exits if required
+    fields are missing.
+
+    Parameters
+    ----------
+    freyja_results : Path
+        Location of text file containing Freyja results
+    outfile : Path
+        Location to save CSV file containing parsed Freyja results.
+    """
+    # Define expected fields and their types
+    field_parsers = {
+        "lineages": lambda x: x[1:],  # Take everything after 'lineages'
+        "abundances": lambda x: list(map(float, x[1:])),  # Convert to float
+        "resid": lambda x: float(x[-1]),  # Take last value as float
+        "coverage": lambda x: float(x[-1]),
+    }
+
+    results = {}
+
+    with open(freyja_results) as f:
+        for line in f:
+            # Split line into tokens and find matching parser
+            tokens = line.strip().split()
+            field = next((k for k in field_parsers if line.startswith(k)), None)
+
+            if field:
+                results[field] = field_parsers[field](tokens)
+
+    # Verify all required fields were found
+    missing_fields = set(field_parsers) - set(results)
+    if missing_fields:
+        console.log(
+            f"Error: The following fields are missing from the Freyja results: {missing_fields}. Please check the output of Freyja {freyja_results}"
+        )
+        sys.exit(-67)
+
+    # Calculate conflict score, top lineage, and construct a summary
+    confidence = np.exp(sum(a * np.log(a) for a in results["abundances"] if a > 0))
+    top_lineage = results["lineages"][np.argmax(results["abundances"])]
+    summary = "Freyja results: " + " ".join(
+        f"{lin}({abun:.1%})"
+        for lin, abun in zip(results["lineages"], results["abundances"])
+    )
+
+    with open(outfile, "wt") as out_file:
+        out_file.write("sequence_id,lineage,confidence,freyja_notes\n")
+        out_file.write(f"foo,{top_lineage},{confidence:.3f},{summary}\n")

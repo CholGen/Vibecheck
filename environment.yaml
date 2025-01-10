@@ -6,8 +6,13 @@ dependencies:
   - python
   - usher
   - biopython
-  - minimap2
-  - snakemake-minimal
+  - minimap2=2.28
   - rich
   - gofasta
   - pandas
+  - freyja
+  - bcftools
+  - samtools
+  - seqtk
+  - pytest
+  - pyarrow

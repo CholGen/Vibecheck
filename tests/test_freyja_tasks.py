@@ -1,5 +1,6 @@
 import shutil
 
+import pandas as pd
 import pytest
 from pathlib import Path
 from unittest.mock import patch, call
@@ -9,6 +10,7 @@ from vibecheck.src.freyja_tasks import (
     generate_depth,
     call_variants,
     freyja_demix,
+    parse_freyja_results,
 )
 
 
@@ -77,9 +79,9 @@ def test_downsample_reads(
 @patch("vibecheck.src.freyja_tasks.run_command")
 def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
     result = align_reads(
-        mock_paths["reference"],
         mock_paths["read1"],
         mock_paths["read2"],
+        mock_paths["reference"],
         mock_paths["tempdir"],
     )
 
@@ -100,7 +102,7 @@ def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
 @patch("vibecheck.src.freyja_tasks.run_command")
 def test_generate_depth(mock_run_command, mock_paths, mock_file_exists):
     result = generate_depth(
-        mock_paths["reference"], mock_paths["alignment"], mock_paths["tempdir"]
+        mock_paths["alignment"], mock_paths["reference"], mock_paths["tempdir"]
     )
 
     mock_run_command.assert_called_once_with(
@@ -113,7 +115,7 @@ def test_generate_depth(mock_run_command, mock_paths, mock_file_exists):
 @patch("vibecheck.src.freyja_tasks.run_command")
 def test_call_variants(mock_run_command, mock_paths, mock_file_exists):
     result = call_variants(
-        mock_paths["reference"], mock_paths["alignment"], mock_paths["tempdir"]
+        mock_paths["alignment"], mock_paths["reference"], mock_paths["tempdir"]
     )
 
     expected_calls = [
@@ -144,3 +146,68 @@ def test_freyja_demix(mock_run_command, mock_paths, mock_file_exists):
         error_message="Freyja demix failed",
     )
     assert result == mock_paths["tempdir"] / "freyja_results.txt"
+
+
+@pytest.fixture
+def freyja_resultsA(tmp_path):
+    input_file = tmp_path / "freyja_results.txt"
+    output_file = tmp_path / "parsed_results.csv"
+
+    input_text = (
+        "mixed_sample.vcf\n"
+        "summarized      [('Other', 0.9999999968413253)]\n"
+        "lineages        MEASLES-D9 MEASLES-H1\n"
+        "abundances      0.79692605 0.20307394\n"
+        "resid   214.51679168207156\n"
+        "coverage        91.39927016484208\n"
+    )
+
+    input_file.write_text(input_text)
+    parse_freyja_results(input_file, output_file)
+    return output_file
+
+
+def test_parse_freyja_results_A(freyja_resultsA):
+    expected_result = (
+        "sequence_id,lineage,confidence,freyja_notes\n"
+        "foo,MEASLES-D9,0.604,Freyja results: MEASLES-D9(79.7%) MEASLES-H1(20.3%)\n"
+    )
+    assert freyja_resultsA.read_text() == expected_result
+
+
+def test_parse_freyja_results_valid_csv(freyja_resultsA):
+    df = pd.read_csv(freyja_resultsA)
+    assert df.shape == (1, 4)
+    assert df.columns.to_list() == [
+        "sequence_id",
+        "lineage",
+        "confidence",
+        "freyja_notes",
+    ]
+
+
+@pytest.fixture
+def freyja_resultsB(tmp_path):
+    input_file = tmp_path / "freyja_results.txt"
+    output_file = tmp_path / "parsed_results.csv"
+
+    input_text = (
+        "\tOUG-1858.variants-filled.vcf\n"
+        "summarized\t[('Other', 0.9999999999873125)]\n"
+        "lineages\tT13\n"
+        "abundances\t1.00000000\n"
+        "resid\t2.661981530311349\n"
+        "coverage\t94.37996916326536\n"
+    )
+
+    input_file.write_text(input_text)
+    parse_freyja_results(input_file, output_file)
+    return output_file
+
+
+def test_parse_freyja_results_B(freyja_resultsB):
+    expected_result = (
+        "sequence_id,lineage,confidence,freyja_notes\n"
+        "foo,T13,1.000,Freyja results: T13(100.0%)\n"
+    )
+    assert freyja_resultsB.read_text() == expected_result

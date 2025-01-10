@@ -4,7 +4,7 @@ import os
 import sys
 from importlib.resources import files
 
-from vibecheck.src import qc, usher_tasks, utilities
+from vibecheck.src import qc, usher_tasks, utilities, freyja_tasks
 from vibecheck.src.console import console
 from vibecheck import __version__
 
@@ -82,16 +82,25 @@ def main(sysargs=None):
                 outfile,
                 threads,
             )
-        # else:
+    else:
         # Checking Freyja pipeline
         barcodes = qc.check_barcodes(args.barcodes)
         subsample_frac = qc.check_subsampling_frac(args.subsample)
-        # console.rule( f"[bold] Classifying input reads" )
-        # with console.status( "Processing...", spinner="bouncingBall" ):
+        console.rule(f"[bold] Classifying input reads")
+        with console.status("Processing...", spinner="bouncingBall"):
+            freyja_tasks.run_pipeline(
+                reads=query_file,
+                barcodes=barcodes,
+                reference=REFERENCE,
+                subsample_fraction=subsample_frac,
+                no_subsample=args.no_subsample,
+                tempdir=tempdir,
+                outfile=outfile,
+                threads=threads,
+            )
 
     console.rule("[bold] Complete!")
     console.print(f"Lineage assignments are available in {outfile}.")
-
 
 if __name__ == "__main__":
     main()
