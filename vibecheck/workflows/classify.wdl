@@ -71,7 +71,7 @@ task vibecheck {
     output {
         File lineage_report         = "lineage_report.csv"
         String top_lineage          = read_string("LINEAGE")
-        Float conflict              = read_float("CONFIDENCE")
+        Float confidence            = read_float("CONFIDENCE")
         String classification_notes = read_string("CLASSIFICATION_NOTES")
         String pass_qc              = read_string("QC_STATUS")
         String qc_notes             = read_string("QC_NOTES")
