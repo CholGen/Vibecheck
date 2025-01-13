@@ -26,11 +26,11 @@ workflow classify_cholera_reads {
 
     call vibecheck_reads
     output {
-        File vibecheck_reads_report           = vibecheck_reads.lineage_report
-        String vibecheck_reads_lineage        = vibecheck_reads.top_lineage
-        Float vibecheck_reads_confidence      = vibecheck_reads.confidence
-        String vibecheck_reads_freyja_notes   = vibecheck_reads.freyja_notes
-        String vibecheck_reads_version        = vibecheck_reads.version
+        File vibecheck_reads_report                 = vibecheck_reads.lineage_report
+        String vibecheck_reads_lineage              = vibecheck_reads.top_lineage
+        Float vibecheck_reads_confidence            = vibecheck_reads.confidence
+        String vibecheck_reads_classification_notes = vibecheck_reads.classification_notes
+        String vibecheck_reads_version              = vibecheck_reads.version
     }
 }
 
@@ -64,7 +64,7 @@ task vibecheck_reads {
         with open( "lineage_report.csv", "rt" ) as csv_file:
             reader = csv.DictReader( csv_file )
             line = next( reader )
-            for key in ["lineage", "confidence", "freyja_notes"]:
+            for key in ["lineage", "confidence", "classification_notes"]:
                 with open( key.upper(), "wt" ) as outf:
                     outf.write(line[key])
         CODE
@@ -78,10 +78,10 @@ task vibecheck_reads {
         dx_instance_type: "mem1_ssd1_v2_x2"
     }
     output {
-        File lineage_report = "lineage_report.csv"
-        String top_lineage  = read_string("LINEAGE")
-        Float confidence    = read_float("CONFIDENCE")
-        String freyja_notes = read_string("FREYJA_NOTES")
-        String version      = read_string("VERSION")
+        File lineage_report         = "lineage_report.csv"
+        String top_lineage          = read_string("LINEAGE")
+        Float confidence            = read_float("CONFIDENCE")
+        String classification_notes = read_string("CLASSIFICATION_NOTES")
+        String version              = read_string("VERSION")
     }
 }
