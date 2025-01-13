@@ -83,11 +83,12 @@ def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
         mock_paths["read2"],
         mock_paths["reference"],
         mock_paths["tempdir"],
+        1
     )
 
     expected_calls = [
         call(
-            "minimap2 -ax sr /test/reference.fasta /test/read1.fastq.gz /test/read2.fastq.gz | samtools view -b - | samtools sort -o /test/temp/alignment.bam -",
+            "minimap2 -ax sr -t 1 /test/reference.fasta /test/read1.fastq.gz /test/read2.fastq.gz | samtools view -b - | samtools sort -o /test/temp/alignment.bam -",
             error_message="Alignment of raw reads failed",
         ),
         call(
@@ -163,14 +164,14 @@ def freyja_resultsA(tmp_path):
     )
 
     input_file.write_text(input_text)
-    parse_freyja_results(input_file, output_file)
+    parse_freyja_results(input_file, "testA", output_file)
     return output_file
 
 
 def test_parse_freyja_results_A(freyja_resultsA):
     expected_result = (
         "sequence_id,lineage,confidence,freyja_notes\n"
-        "foo,MEASLES-D9,0.604,Freyja results: MEASLES-D9(79.7%) MEASLES-H1(20.3%)\n"
+        "testA,MEASLES-D9,0.604,Freyja results: MEASLES-D9(79.7%) MEASLES-H1(20.3%)\n"
     )
     assert freyja_resultsA.read_text() == expected_result
 
@@ -201,13 +202,13 @@ def freyja_resultsB(tmp_path):
     )
 
     input_file.write_text(input_text)
-    parse_freyja_results(input_file, output_file)
+    parse_freyja_results(input_file, "testB", output_file)
     return output_file
 
 
 def test_parse_freyja_results_B(freyja_resultsB):
     expected_result = (
         "sequence_id,lineage,confidence,freyja_notes\n"
-        "foo,T13,1.000,Freyja results: T13(100.0%)\n"
+        "testB,T13,1.000,Freyja results: T13(100.0%)\n"
     )
     assert freyja_resultsB.read_text() == expected_result

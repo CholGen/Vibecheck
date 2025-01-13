@@ -19,6 +19,8 @@ def run_pipeline(
     threads: int,
 ) -> None:
 
+    name = str( reads[0].name ).split( "." )[0]
+
     if no_subsample:
         console.log("Aligning reads to reference")
         alignment = align_reads(*reads, reference, tempdir)
@@ -27,19 +29,19 @@ def run_pipeline(
         sub_read1, sub_read2 = downsample_reads(*reads, tempdir, subsample_fraction)
 
         console.log("Aligning reads to reference")
-        alignment = align_reads(sub_read1, sub_read2, reference, tempdir)
+        alignment = align_reads(sub_read1, sub_read2, reference, tempdir, threads)
 
     console.log("Calculating depth of coverage across reference genome.")
     depth = generate_depth(alignment, reference, tempdir)
 
     console.log("Calling variants between reads and reference.")
-    variants_filled = call_variants(alignment, reference, tempdir)
+    variants_filled = call_variants(alignment, reference, tempdir, threads)
 
     console.log("Calculating relative lineage abundances using Freyja.")
     freyja_results = freyja_demix(variants_filled, depth, barcodes, tempdir)
 
     console.log("Parsing Freyja results.")
-    parse_freyja_results(freyja_results, outfile)
+    parse_freyja_results(freyja_results, name, outfile)
 
 
 def downsample_reads(
@@ -86,7 +88,7 @@ def downsample_reads(
     return sub_read1, sub_read2
 
 
-def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path) -> Path:
+def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path, threads: int) -> Path:
     """Aligns reads to a reference using `minimap2` and processes with `samtools`.
 
     Parameters
@@ -99,6 +101,8 @@ def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path) -> Pat
         Location of FASTA file containing the reference sequence.
     tempdir : Path
         Location of temporary directory.
+    threads : int
+        number of threads to use during alignment
 
     Returns
     -------
@@ -107,7 +111,7 @@ def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path) -> Pat
     """
     alignment = tempdir / "alignment.bam"
 
-    minimap_command = f"minimap2 -ax sr {reference} {read1} {read2} | samtools view -b - | samtools sort -o {alignment} -"
+    minimap_command = f"minimap2 -ax sr -t {threads} {reference} {read1} {read2} | samtools view -b - | samtools sort -o {alignment} -"
     index_command = f"samtools index {alignment}"
 
     run_command(minimap_command, error_message="Alignment of raw reads failed")
@@ -221,7 +225,7 @@ def freyja_demix(
     return freyja_output
 
 
-def parse_freyja_results(freyja_results: Path, outfile: Path) -> None:
+def parse_freyja_results(freyja_results: Path, name: str, outfile: Path) -> None:
     """Parses Freyja lineage abundance results from a text file. Exits if required
     fields are missing.
 
@@ -229,6 +233,8 @@ def parse_freyja_results(freyja_results: Path, outfile: Path) -> None:
     ----------
     freyja_results : Path
         Location of text file containing Freyja results
+    name :  str
+        Name of sample.
     outfile : Path
         Location to save CSV file containing parsed Freyja results.
     """
@@ -269,4 +275,4 @@ def parse_freyja_results(freyja_results: Path, outfile: Path) -> None:
 
     with open(outfile, "wt") as out_file:
         out_file.write("sequence_id,lineage,confidence,freyja_notes\n")
-        out_file.write(f"foo,{top_lineage},{confidence:.3f},{summary}\n")
+        out_file.write(f"{name},{top_lineage},{confidence:.3f},{summary}\n")

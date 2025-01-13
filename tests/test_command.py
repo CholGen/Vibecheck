@@ -129,13 +129,13 @@ def inputFreyha():
     if outdir.exists():
         shutil.rmtree(outdir)
 
-@pytest.mark.skip(reason="Input files are too large")
+#@pytest.mark.skip(reason="Input files are too large")
 def test_Freyja_pipeline(inputFreyha):
     results = inputFreyha / "lineage_report.csv"
 
     expected_result = (
         "sequence_id,lineage,confidence,freyja_notes\n"
-        "foo,T13,1.000,Freyja results: T13(100.0%)\n"
+        "OUG-1858,T13,1.000,Freyja results: T13(100.0%)\n"
     )
 
     assert results.exists()
