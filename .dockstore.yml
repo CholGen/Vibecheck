@@ -7,3 +7,10 @@ workflows:
     authors:
       - name: Nathaniel L. Matteson
         email: nmatteson@bwh.harvard.edu
+  - subclass: WDL
+    primaryDescriptorPath: /vibecheck/workflows/classify_reads.wdl
+    name: vibecheck-lineage-assignment-reads
+    topic: Rapid classification of cholera sequencing data using variant frequency demixing.
+    authors:
+      - name: Nathaniel L. Matteson
+        email: nmatteson@bwh.harvard.edu
