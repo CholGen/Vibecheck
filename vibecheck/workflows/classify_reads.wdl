@@ -44,7 +44,7 @@ task vibecheck_reads {
         File read2
         File? lineage_barcodes
         Float? subsampling_fraction
-        Boolean skip_subsampling
+        Boolean skip_subsampling=false
         String docker="watronfire/vibecheck:latest"
     }
     Int disk_size = 16
