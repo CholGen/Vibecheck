@@ -12,7 +12,7 @@ workflow classify_cholera {
             description: "Genome sequence in FASTA format",
             patterns: ["*.fasta","*.fa"]
         }
-        max_ambiguiety: {
+        max_ambiguity: {
             description: "Maximum number of ambiguous bases a sequence can have before its filtered from the analysis"
         }
     }
@@ -36,7 +36,7 @@ task vibecheck {
     input {
         File query_fasta
         File? usher_tree
-        Float? max_ambiquity=0.3
+        Float? max_ambiguity
         String docker="watronfire/vibecheck:latest"
     }
     Int disk_size = 16
@@ -48,7 +48,7 @@ task vibecheck {
         vibecheck "~{query_fasta}" \
             --outdir . \
             ~{"--usher-tree " + usher_tree} \
-            ~{"--max-ambiquity " + max_ambiquity}
+            ~{"--max-ambiguity " + max_ambiguity}
 
         python3 <<CODE
         import csv
