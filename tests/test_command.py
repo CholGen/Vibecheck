@@ -9,10 +9,10 @@ import pytest
 from vibecheck.command import main
 
 expected_resultAll = (
-    "sequence_id,qc_status,qc_notes,lineage,conflict,usher_note\n"
-    "Africa|KEN|ERR037738|T10|2010-01-01,pass,Ambiguous_content:0.01%,T10,0.0,Usher placements: T10(1/1)\n"
-    "Africa|TZA|SAMN19110428|T13|2017-01-01,pass,Ambiguous_content:0.01%,T13,0.0,Usher placements: T13(1/1)\n"
-    "Africa|ZAF|ERS14903183|T15|2023-01-01,pass,Ambiguous_content:0.04%,T15,0.0,Usher placements: T15(1/1)\n"
+    "sequence_id,qc_status,qc_notes,lineage,confidence,classification_notes\n"
+    "Africa|KEN|ERR037738|T10|2010-01-01,pass,Ambiguous_content:0.01%,T10,1.0,Usher placements: T10(1/1)\n"
+    "Africa|TZA|SAMN19110428|T13|2017-01-01,pass,Ambiguous_content:0.01%,T13,1.0,Usher placements: T13(1/1)\n"
+    "Africa|ZAF|ERS14903183|T15|2023-01-01,pass,Ambiguous_content:0.04%,T15,1.0,Usher placements: T15(1/1)\n"
 )
 
 
@@ -134,7 +134,7 @@ def test_Freyja_pipeline(inputFreyha):
     results = inputFreyha / "lineage_report.csv"
 
     expected_result = (
-        "sequence_id,lineage,confidence,freyja_notes\n"
+        "sequence_id,lineage,confidence,classification_notes\n"
         "OUG-1858,T13,1.000,Freyja results: T13(100.0%)\n"
     )
 

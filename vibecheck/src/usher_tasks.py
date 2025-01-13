@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 from typing import Tuple
 import pandas as pd
+import numpy as np
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -258,7 +259,7 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
     outfile = tempdir / "parsed_results.csv"
 
     with open(outfile, "w") as fw:
-        fw.write("sequence_id,lineage,conflict,usher_note\n")
+        fw.write("sequence_id,lineage,confidence,classification_notes\n")
 
         with open(results, "r") as f:
             for line in f:
@@ -274,13 +275,11 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
                     # example: A.28*|A.28(1/10),B.1(6/10),B.1.511(1/10),B.1.518(2/10)
                     lineage, histogram = lineage_histogram.split("*|")
                     histo_list = [i for i in histogram.split(",") if i]
-                    conflict = 0.0
+                    confidence = 0.0
                     if len(histo_list) > 1:
-                        selected_count = 0
-                        total = 0
                         for lin_counts in histo_list:
                             m = re.match(
-                                r"([A-Z0-9.]+)\(([0-9]+)/([0-9]+)\)", lin_counts
+                                r"([A-Z0-9.]+)\(([0-9]+)\/([0-9]+)\)", lin_counts
                             )
                             if m:
                                 lin, place_count, total = [
@@ -288,17 +287,16 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
                                     int(m.group(2)),
                                     int(m.group(3)),
                                 ]
-                                if lin == lineage:
-                                    selected_count = place_count
-                                    break
-                        conflict = (total - selected_count) / total
+                                print( "ear" )
+                                confidence += (place_count / total) * np.log( place_count / total )
+                    confidence = np.exp( confidence )
                     histogram_note = "Usher placements: " + " ".join(histo_list)
                 else:
                     lineage = lineage_histogram
-                    conflict = ""
+                    confidence =  1.0
                     histogram_note = ""
 
-                fw.write(f"{name},{lineage},{conflict},{histogram_note}\n")
+                fw.write(f"{name},{lineage},{confidence},{histogram_note}\n")
     return outfile
 
 

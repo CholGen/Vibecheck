@@ -274,5 +274,5 @@ def parse_freyja_results(freyja_results: Path, name: str, outfile: Path) -> None
     )
 
     with open(outfile, "wt") as out_file:
-        out_file.write("sequence_id,lineage,confidence,freyja_notes\n")
+        out_file.write("sequence_id,lineage,confidence,classification_notes\n")
         out_file.write(f"{name},{top_lineage},{confidence:.3f},{summary}\n")

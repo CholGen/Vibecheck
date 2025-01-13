@@ -142,13 +142,13 @@ def test_usher_parsing_valid_input(tmp_path):
     results = tmp_path / "results.txt"
     outfile = tmp_path / "parsed_results.csv"
 
-    results.write_text("hash1\tA.28*|A.28(1/10),B.1(6/10)\nhash2\tB.1.1\n")
+    results.write_text("hash1\tA.28*|A.28(1/10),B.1(6/10),B.1.511(1/10),B.1.518(2/10)\nhash2\tB.1.1\n")
     usher_parsing(results, tmp_path)
 
     expected = (
-        "sequence_id,lineage,conflict,usher_note\n"
-        "hash1,A.28,0.9,Usher placements: A.28(1/10) B.1(6/10)\n"
-        "hash2,B.1.1,,\n"
+        "sequence_id,lineage,confidence,classification_notes\n"
+        "hash1,A.28,0.3365865436338598,Usher placements: A.28(1/10) B.1(6/10) B.1.511(1/10) B.1.518(2/10)\n"
+        "hash2,B.1.1,1.0,\n"
     )
     assert outfile.read_text() == expected
 
@@ -160,7 +160,7 @@ def test_usher_parsing_empty_input(tmp_path):
     results.touch()
     usher_parsing(results, tmp_path)
 
-    assert outfile.read_text() == "sequence_id,lineage,conflict,usher_note\n"
+    assert outfile.read_text() == "sequence_id,lineage,confidence,classification_notes\n"
 
 
 def test_usher_parsing_malformed_input(tmp_path):

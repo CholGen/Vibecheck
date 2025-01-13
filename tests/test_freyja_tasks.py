@@ -170,7 +170,7 @@ def freyja_resultsA(tmp_path):
 
 def test_parse_freyja_results_A(freyja_resultsA):
     expected_result = (
-        "sequence_id,lineage,confidence,freyja_notes\n"
+        "sequence_id,lineage,confidence,classification_notes\n"
         "testA,MEASLES-D9,0.604,Freyja results: MEASLES-D9(79.7%) MEASLES-H1(20.3%)\n"
     )
     assert freyja_resultsA.read_text() == expected_result
@@ -183,7 +183,7 @@ def test_parse_freyja_results_valid_csv(freyja_resultsA):
         "sequence_id",
         "lineage",
         "confidence",
-        "freyja_notes",
+        "classification_notes",
     ]
 
 
@@ -208,7 +208,7 @@ def freyja_resultsB(tmp_path):
 
 def test_parse_freyja_results_B(freyja_resultsB):
     expected_result = (
-        "sequence_id,lineage,confidence,freyja_notes\n"
+        "sequence_id,lineage,confidence,classification_notes\n"
         "testB,T13,1.000,Freyja results: T13(100.0%)\n"
     )
     assert freyja_resultsB.read_text() == expected_result
