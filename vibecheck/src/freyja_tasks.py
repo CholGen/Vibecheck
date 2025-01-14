@@ -19,7 +19,7 @@ def run_pipeline(
     threads: int,
 ) -> None:
 
-    name = str( reads[0].name ).split( "." )[0]
+    name = str(reads[0].name).split(".")[0]
 
     if no_subsample:
         console.log("Aligning reads to reference")
@@ -88,7 +88,9 @@ def downsample_reads(
     return sub_read1, sub_read2
 
 
-def align_reads(read1: Path, read2: Path, reference: Path, tempdir: Path, threads: int) -> Path:
+def align_reads(
+    read1: Path, read2: Path, reference: Path, tempdir: Path, threads: int
+) -> Path:
     """Aligns reads to a reference using `minimap2` and processes with `samtools`.
 
     Parameters

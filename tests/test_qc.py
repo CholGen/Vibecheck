@@ -106,16 +106,6 @@ def test_check_query_file_tilde_path():
     assert result == Path(file_home_relative).expanduser()
 
 
-def test_check_query_file_example():
-    tests = (
-        (["fasta"], ["fasta", True]),
-        (["fq.gz", "fq.gz"], [["fq.gz", "fq.gz"], False]),
-        (["fastq.gz", "fastq.gz"], [["fastq.gz", "fastq.gz"], False]),
-        (["fasta", "fastq.gz"], ["Error"]),
-        (["fastq.gz", "fastq.gz", "fastq.gz"], ["Error"]),
-    )
-
-
 def test_check_query_file_detect_fasta(tmp_path):
     file = tmp_path / "query.fasta"
     file.touch()

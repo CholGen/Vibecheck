@@ -71,7 +71,7 @@ def main(sysargs=None):
         # Checking UShER pipeline.
         protobuf_file = qc.check_tree(args.usher_tree)
         max_ambiguity = qc.check_max_ambiguity(args.max_ambiguity)
-        console.rule(f"[bold] Classifying input sequences")
+        console.rule("[bold] Classifying input sequences")
         with console.status("Processing...", spinner="bouncingBall"):
             usher_tasks.run_pipeline(
                 query_file,
@@ -86,7 +86,7 @@ def main(sysargs=None):
         # Checking Freyja pipeline
         barcodes = qc.check_barcodes(args.barcodes)
         subsample_frac = qc.check_subsampling_frac(args.subsample)
-        console.rule(f"[bold] Classifying input reads")
+        console.rule("[bold] Classifying input reads")
         with console.status("Processing...", spinner="bouncingBall"):
             freyja_tasks.run_pipeline(
                 reads=query_file,
@@ -101,6 +101,7 @@ def main(sysargs=None):
 
     console.rule("[bold] Complete!")
     console.print(f"Lineage assignments are available in {outfile}.")
+
 
 if __name__ == "__main__":
     main()

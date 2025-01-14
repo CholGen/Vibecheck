@@ -282,18 +282,19 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
                                 r"([A-Z0-9.]+)\(([0-9]+)\/([0-9]+)\)", lin_counts
                             )
                             if m:
-                                lin, place_count, total = [
-                                    m.group(1),
+                                place_count, total = [
                                     int(m.group(2)),
                                     int(m.group(3)),
                                 ]
-                                print( "ear" )
-                                confidence += (place_count / total) * np.log( place_count / total )
-                    confidence = np.exp( confidence )
+                                print("ear")
+                                confidence += (place_count / total) * np.log(
+                                    place_count / total
+                                )
+                    confidence = np.exp(confidence)
                     histogram_note = "Usher placements: " + " ".join(histo_list)
                 else:
                     lineage = lineage_histogram
-                    confidence =  1.0
+                    confidence = 1.0
                     histogram_note = ""
 
                 fw.write(f"{name},{lineage},{confidence},{histogram_note}\n")

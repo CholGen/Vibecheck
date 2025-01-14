@@ -83,7 +83,7 @@ def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
         mock_paths["read2"],
         mock_paths["reference"],
         mock_paths["tempdir"],
-        1
+        1,
     )
 
     expected_calls = [

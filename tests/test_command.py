@@ -129,6 +129,7 @@ def inputFreyha():
     if outdir.exists():
         shutil.rmtree(outdir)
 
+
 @pytest.mark.skip(reason="Input files are too large")
 def test_Freyja_pipeline(inputFreyha):
     results = inputFreyha / "lineage_report.csv"

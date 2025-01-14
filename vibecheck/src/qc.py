@@ -166,7 +166,7 @@ def check_query_file(
     if len(expanded_paths) != len(fasta_files) + len(fastq_files):
         invalid_files = expanded_paths - (fasta_files | fastq_files)
         console.log(
-            f"Error: File extensions not recognized: {', '.join( str( p ) for p in invalid_files )}. Only fasta ({fasta_extensions}) and fastq ({fastq_extensions}) files are recognized."
+            f"Error: File extensions not recognized: {', '.join(str(p) for p in invalid_files)}. Only fasta ({fasta_extensions}) and fastq ({fastq_extensions}) files are recognized."
         )
         sys.exit(-7)
 
@@ -177,7 +177,7 @@ def check_query_file(
         return use_file, True  # Return single Path for FASTA
     else:
         use_file = tuple(sorted(fastq_files))
-        console.print(f"Using query fastq files: {list(map(str,use_file))}")
+        console.print(f"Using query fastq files: {list(map(str, use_file))}")
         return use_file, False  # Return tuple of Paths for FASTQ
 
 
