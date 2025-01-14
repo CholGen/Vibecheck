@@ -10,9 +10,10 @@ dependencies:
   - rich
   - gofasta
   - pandas
-  - freyja
   - bcftools
   - samtools
   - seqtk
   - pytest
   - pyarrow
+  - pip:
+      - "git+https://github.com/watronfire/Freyja.git@patch-3"
