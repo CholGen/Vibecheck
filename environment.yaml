@@ -15,11 +15,15 @@ dependencies:
   - seqtk
   - pytest
   - pyarrow
-  - pyyaml
+  - joblib
   - tqdm
   - plotly
-  - seaborn-base
+  - pyyaml
+  - requests
   - epiweeks
   - pysam
+  - seaborn-base
+  - sphinx
+  - sphinx_rtd_theme
   - pip:
       - "git+https://github.com/watronfire/Freyja.git@patch-3"
