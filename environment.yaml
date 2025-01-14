@@ -15,5 +15,11 @@ dependencies:
   - seqtk
   - pytest
   - pyarrow
+  - pyyaml
+  - tqdm
+  - plotly
+  - seaborn-base
+  - epiweeks
+  - pysam
   - pip:
       - "git+https://github.com/watronfire/Freyja.git@patch-3"
