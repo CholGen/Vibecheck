@@ -16,6 +16,7 @@ WORKDIR /home/mambauser/
 COPY --chown=$MAMBA_USER:$MAMBA_USER . ./vibecheck/
 WORKDIR /home/mambauser/vibecheck/
 
+RUN apt-get update && apt-get install -y --no-install-recommends git
 RUN micromamba install -y -n base -f environment.yaml \
     && micromamba clean --all --yes
 # Specify path to gain access to conda environment without terminal model
