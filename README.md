@@ -47,26 +47,27 @@ The tool automatically selects the appropriate analysis workflow based on your i
 When provided with a multi-sequence fasta containing whole genome sequences, generated either by reference-based or _de novo_ assembly,
 Vibecheck: 
 
-1. Aligns all input sequences against an early reference O1 _Vibrio cholerae_ genome. 
-Vibecheck generates the alignment using [minimap2](https://github.com/lh3/minimap2) to map sequences again the reference and generates a multi-sequence fasta from the mapping using [gofasta](https://github.com/virus-evolution/gofasta).
-2. Run each sequence through a QC check that reports the proportion of each sequence that is ambiguous characters. 
-Any sequences that fail this check will not get assigned a lineage.
-3. Identifies SNP differences between each sequence and the reference (i.e. variants) and generates a VCF file summarizing the variants using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master) script.
-4. Places each sequence into a lineage-annotated phylogeny using [UShER](https://github.com/yatisht/usher), and records whether the placement is contained within a lineage.
-5. Parses the output of UShER, calculates the confidence in each lineage estimation, and produces a final lineage report.
+1. Aligns sequences to a reference O1 _V. cholerae_ genome using [minimap2](https://github.com/lh3/minimap2) and converts the mapping to a multi-sequence FASTA using [gofasta](https://github.com/virus-evolution/gofasta).
+2. Performs quality control by calculating the proportion of ambiguous characters in each sequence. 
+Sequences failing QC are excluded from lineage assignment 
+3. Identifies variants (SNPs) between each sequence and the reference, generating a VCF file using UCSC's [faToVcf](https://github.com/ucscGenomeBrowser/kent/tree/master).
+4. Places sequences into a lineage-annotated phylogeny using [UShER](https://github.com/yatisht/usher), and records whether the placement is contained within a lineage.
+5. Analyzes UShER output to calculate lineage assignment confidence and generates a final report
 
 ## Read-based classification
 When provided with a pair of fastq files representing the raw sequencing data for a sample, Vibecheck:
 
-1. Randomly subsamples 20% of reads using [seqtk](https://github.com/lh3/seqtk) to ease computational demands and speed-up the analysis.
-2. Aligns all input sequences against an early reference O1 _Vibrio cholerae_ genome using [minimap2](https://github.com/lh3/minimap2).
-3. Calls variants present in the reads against the alignment using [BCFtools](https://github.com/samtools/bcftools).
-4. Estimates the relative abundance of each lineage from the variant frequencies in the sample using [Freyja](https://github.com/andersen-lab/Freyja/).
-5. Parsed the output of Freyja, calculates the confidence in the lineage estimate, and produces a final lineage report.
+1. Subsamples 20% of reads using [seqtk](https://github.com/lh3/seqtk) to ease computational demands and speed-up the analysis.
+2. Aligns reads to a reference O1 _V. cholerae_ genome using [minimap2](https://github.com/lh3/minimap2).
+3. Calls variants from the alignment using [BCFtools](https://github.com/samtools/bcftools).
+4. Estimates lineage abundances from variant frequencies using [Freyja](https://github.com/andersen-lab/Freyja/).
+5. Analyzes Freyja output to calculate confidence scores and generates a final report
 
-Validation of Vibecheck showed that it was >98% accurate in recapitulating the lineages of sequences left out of the guide tree.
-See the [calculate_accuracy](notebooks/calculate_accuracy.ipynb) notebook for the complete validation of the speed and accuracy of Vibecheck. 
-See also the [ambiguity_thresholding](notebooks/ambiquity_thresholding.ipynb) notebook for the empirical basis of our default maximum ambiguous parameter.
+## Validation 
+Vibecheck achieves >98% accuracy in recapitulating lineages of sequences excluded from the guide tree.
+For detailed validation of speed and accuracy, see the [calculate_accuracy](notebooks/calculate_accuracy.ipynb) notebook.
+
+For information on the empirical basis of our default maximum ambiguity parameter, see the [ambiguity_thresholding](notebooks/ambiquity_thresholding.ipynb) notebook.
 
 # Installation
 1. Install `mamba` by running the following two command:
