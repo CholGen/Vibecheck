@@ -286,7 +286,6 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
                                     int(m.group(2)),
                                     int(m.group(3)),
                                 ]
-                                print("ear")
                                 confidence += (place_count / total) * np.log(
                                     place_count / total
                                 )
