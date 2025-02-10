@@ -144,6 +144,9 @@ This command will generate a CSV file (`lineage_report.csv`) containing the esti
 See [Output](#output) for a complete description of this file.
 
 > [!ATTENTION]
+> Vibecheck is also available for use on Terra. 
+> The sequence-based classification workflow is available [here](https://dockstore.org/workflows/github.com/CholGen/Vibecheck/vibecheck-lineage-assignment-reads:main), 
+> and the read-based classification workflow is available [here](https://dockstore.org/workflows/github.com/CholGen/Vibecheck/vibecheck-lineage-assignment:main)
 
 ## Full usage options
 ```
