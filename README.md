@@ -78,7 +78,7 @@ bash Mambaforge-$(uname)-$(uname -m).sh
 
 2. Clone the vibecheck repository:
 ```commandline
-git clone https://github.com/watronfire/vibecheck.git
+git clone https://github.com/CholGen/Vibecheck.git
 ```
 
 3. Move to the repository:
