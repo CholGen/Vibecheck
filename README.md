@@ -72,8 +72,8 @@ For information on the empirical basis of our default maximum ambiguity paramete
 # Installation
 1. Install `mamba` by running the following two command:
 ```commandline
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-bash Mambaforge-$(uname)-$(uname -m).sh
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash Miniforge3-$(uname)-$(uname -m).sh
 ```
 
 2. Clone the vibecheck repository:
