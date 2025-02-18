@@ -187,7 +187,7 @@ def convert_to_vcf(aln: Path, reference: Path, tempdir: Path) -> Path:
     generate_ref_aln_command = (
         f"cat {reference} > {seqs_ref} && cat {aln} >> {seqs_ref}"
     )
-    generate_vcf_command = f"faToVcf -includeNoAltN {seqs_ref} {vcf}"
+    generate_vcf_command = f"faToVcf {seqs_ref} {vcf}"
 
     # Concatenate reference sequence and alignment
     run_command(
