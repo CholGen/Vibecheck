@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Get version ID
+        run: |
+          VER=$(cut -f2 -d\" bacpage/__init__.py)
+          echo "VERSION=$VER" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -26,4 +30,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: watronfire/vibecheck:latest
+          tags: watronfire/vibecheck:${{ env.VERSION }}
