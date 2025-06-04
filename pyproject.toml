@@ -9,7 +9,7 @@ authors = [
     {name = "watronfire", email="snowboardman007@gmail.com"}
 ]
 description = "Rapid phylogenetic assignment of O1 Vibrio cholerae lineage"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<=3.13"
 keywords = ["bacteria", "NGS", "snakemake", "phylogenetics"]
 license = {file = "LICENSE"}
 classifiers = [
