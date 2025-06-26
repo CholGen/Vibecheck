@@ -23,7 +23,7 @@ def run_pipeline(
 
     if no_subsample:
         console.log("Aligning reads to reference")
-        alignment = align_reads(*reads, reference, tempdir)
+        alignment = align_reads(reads[0], reads[1], reference, tempdir, threads)
     else:
         console.log(f"Sampling {subsample_fraction:.0%} of reads for classification")
         sub_read1, sub_read2 = downsample_reads(*reads, tempdir, subsample_fraction)
