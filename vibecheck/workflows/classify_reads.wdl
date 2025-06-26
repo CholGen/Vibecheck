@@ -57,7 +57,7 @@ task vibecheck_reads {
             --outdir . \
             ~{"--barcodes " + lineage_barcodes} \
             ~{"--subsampling_fraction " + subsampling_fraction} \
-            ~{true='--no-detect' false='' skip_subsampling}
+            ~{true='--no-subsample' false='' skip_subsampling}
 
         python3 <<CODE
         import csv
