@@ -10,7 +10,7 @@ dependencies:
   - rich
   - gofasta
   - pandas
-  - freyja
+  - freyja=1.53
   - bcftools
   - samtools
   - seqtk
