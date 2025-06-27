@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python
+  - python=3.11
   - usher
   - biopython
   - minimap2=2.28
