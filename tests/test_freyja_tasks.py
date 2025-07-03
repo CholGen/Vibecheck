@@ -260,3 +260,30 @@ def test_parse_freyja_results_B(freyja_resultsB):
         "testB,T13,1.000,Freyja results: T13(100.0%)\n"
     )
     assert freyja_resultsB.read_text() == expected_result
+
+def test_parse_freyja_results_with_alias(tmp_path):
+    input_file = tmp_path / "freyja_results.txt"
+    output_file = tmp_path / "parsed_results.csv"
+
+    input_text = (
+        "\tOUG-1858.variants-filled.vcf\n"
+        "summarized\t[('Other', 0.9999999999873125)]\n"
+        "lineages\tT13\n"
+        "abundances\t1.00000000\n"
+        "resid\t2.661981530311349\n"
+        "coverage\t94.37996916326536\n"
+    )
+
+    aliases = {"T13" : "Other"}
+
+    input_file.write_text(input_text)
+    parse_freyja_results(input_file, "testB", output_file, aliases=aliases)
+
+    expected_result = (
+        "sequence_id,lineage,confidence,classification_notes\n"
+        "testB,Other,1.000,Freyja results: Other(100.0%)\n"
+    )
+
+    assert output_file.read_text() == expected_result
+
+

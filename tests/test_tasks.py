@@ -154,6 +154,25 @@ def test_usher_parsing_valid_input(tmp_path):
     )
     assert outfile.read_text() == expected
 
+def test_usher_parsing_with_aliases(tmp_path):
+    results = tmp_path / "results.txt"
+    outfile = tmp_path / "parsed_results.csv"
+
+    results.write_text(
+        "hash1\tA.28*|A.28(1/10),B.1(6/10),B.1.511(1/10),B.1.518(2/10)\nhash2\tB.1.1\n"
+    )
+
+    aliases = {"A.28" : "Other"}
+
+    usher_parsing(results, tmp_path, aliases=aliases)
+
+    expected = (
+        "sequence_id,lineage,confidence,classification_notes\n"
+        "hash1,Other,0.3365865436338598,Usher placements: Other(1/10) B.1(6/10) B.1.511(1/10) B.1.518(2/10)\n"
+        "hash2,B.1.1,1.0,\n"
+    )
+    assert outfile.read_text() == expected
+
 
 def test_usher_parsing_empty_input(tmp_path):
     results = tmp_path / "results.txt"

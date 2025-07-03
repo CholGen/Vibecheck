@@ -260,3 +260,22 @@ def test_setup_tempdir_relative_path(tmp_path):
     tempdir_home_relative = "~/" / tempdir.absolute().relative_to(home.expanduser())
     result = setup_tempdir(str(tempdir_home_relative), tempdir_home_relative, False)
     assert result == Path(tempdir_home_relative).expanduser()
+
+
+def test_check_lineage_aliases(tmp_path):
+    alias_file = tmp_path / "lineage_aliases.csv"
+    alias_file.write_text(
+        "alias,lineage\n"
+        "a,1\nb,2\nc,3\n"
+    )
+
+    got = check_lineage_aliases(str(alias_file))
+    want = {"a": "1", "b": "2", "c": "3"}
+    assert got == want
+
+def test_check_lineage_aliases_exits_with_nonexistant_file(tmp_path):
+    alias_file = tmp_path / "lineage_aliases.csv"
+
+    with pytest.raises(SystemExit) as e:
+        check_lineage_aliases( str(alias_file) )
+    assert e.value.code != 0
