@@ -37,7 +37,7 @@ task vibecheck {
         File query_fasta
         File? usher_tree
         Float? max_ambiguity
-        String docker="watronfire/vibecheck:latest"
+        String docker="watronfire/vibecheck:2025.07.03"
     }
     Int disk_size = 16
     command <<<
