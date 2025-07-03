@@ -20,6 +20,7 @@ def run_pipeline(
     protobuf_tree: Path,
     reference: Path,
     max_ambiguity: float,
+    lineage_aliases: dict[str, str],
     tempdir: Path,
     outfile: Path,
     threads: int,
@@ -39,7 +40,7 @@ def run_pipeline(
     results = classify_usher(vcf, protobuf_tree, tempdir, threads)
 
     console.log("Parsing Usher results")
-    parsed_results = usher_parsing(results, tempdir)
+    parsed_results = usher_parsing(results, tempdir, lineage_aliases=lineage_aliases)
 
     console.log("Writing results")
     combine_results(parsed_results, qc_stats, outfile)
@@ -244,7 +245,7 @@ def classify_usher(vcf: Path, protobuf_tree: Path, tempdir: Path, threads: int) 
     return clades
 
 
-def usher_parsing(results: Path, tempdir: Path) -> Path:
+def usher_parsing(results: Path, tempdir: Path, lineage_aliases: dict[str, str] ) -> Path:
     """Parses results from Usher classification into columnar format. Basically just
     splits lineage histogram produced when there are multiple parsimonious placements.
 
@@ -254,6 +255,9 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
         Location of results from Usher classification.
     tempdir: Path
         Location of temporary directory.
+    lineage_aliases: dict[str, str]
+        Dictionary of aliases mapped to lineage names.
+
     """
 
     outfile = tempdir / "parsed_results.csv"
@@ -295,6 +299,11 @@ def usher_parsing(results: Path, tempdir: Path) -> Path:
                     lineage = lineage_histogram
                     confidence = 1.0
                     histogram_note = ""
+
+                if lineage in lineage_aliases:
+                    original_lineage = lineage
+                    lineage = lineage_aliases[lineage]
+                    histogram_note = histogram_note.replace( f"{original_lineage}(", f"{lineage}(" )
 
                 fw.write(f"{name},{lineage},{confidence},{histogram_note}\n")
     return outfile

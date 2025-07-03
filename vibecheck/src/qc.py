@@ -334,3 +334,42 @@ def setup_tempdir(tempdir: str, outdir: Path, no_temp: bool) -> Path:
     console.print(f"Intermediate files will be written to: {tempdir_path}")
     (tempdir_path / "logs").mkdir(exist_ok=True)
     return tempdir_path
+
+
+def check_lineage_aliases( alias_loc: str ) -> dict[str, str]:
+    """
+    Checks that lineage alias file exists, and if it does, it parses the file returning
+    a dictionary mapping aliases to lineage names.
+
+    Parameters
+    ----------
+    alias_loc: str
+        Location of lineage alias file.
+
+    Returns
+    -------
+    dict[str, str]
+        Dictionary mapping aliases to lineage names.
+    """
+    alias_path = Path(alias_loc)
+    if alias_loc.startswith("~"):
+        alias_path = alias_path.expanduser()
+    if not alias_path.is_absolute():
+        alias_path = alias_path.absolute()
+
+    if not (alias_path.exists() & alias_path.is_file()):
+        console.log( "Error: lineage alias file not found. Please supply a valid file" )
+        sys.exit(-9)
+
+    import pandas as pd
+
+    try:
+        alias_df = pd.read_csv(alias_path, usecols=["alias", "lineage"], dtype=str )
+    except ValueError:
+        console.log(
+            "Error: lineage alias file does not contain the necessary columns. "
+            "Please make sure the alias file contains columns 'alias' and 'lineage'."
+        )
+        sys.exit(-9)
+
+    return alias_df.set_index("alias")["lineage"].to_dict()

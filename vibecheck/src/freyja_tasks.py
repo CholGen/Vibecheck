@@ -12,6 +12,7 @@ def run_pipeline(
     reads: Tuple[Path, Path],
     reference: Path,
     barcodes: Path,
+    lineage_aliases: dict[str, str],
     subsample_fraction: float,
     no_subsample: bool,
     outfile: Path,
@@ -45,7 +46,7 @@ def run_pipeline(
     freyja_results = freyja_demix(variants_filled, depth, barcodes, tempdir)
 
     console.log("Parsing Freyja results.")
-    parse_freyja_results(freyja_results, name, outfile)
+    parse_freyja_results(freyja_results, name, outfile, lineage_aliases=lineage_aliases)
 
 
 def downsample_reads(
@@ -242,7 +243,7 @@ def freyja_demix(
     return freyja_output
 
 
-def parse_freyja_results(freyja_results: Path, name: str, outfile: Path) -> None:
+def parse_freyja_results(freyja_results: Path, name: str, outfile: Path, lineage_aliases: dict[str, str] ) -> None:
     """Parses Freyja lineage abundance results from a text file. Exits if required
     fields are missing.
 
@@ -254,6 +255,8 @@ def parse_freyja_results(freyja_results: Path, name: str, outfile: Path) -> None
         Name of sample.
     outfile : Path
         Location to save CSV file containing parsed Freyja results.
+    lineage_aliases : dict[str, str]
+        Dictionary of aliases mapped to lineage names.
     """
     # Define expected fields and their types
     field_parsers = {
@@ -281,6 +284,14 @@ def parse_freyja_results(freyja_results: Path, name: str, outfile: Path) -> None
             f"Error: The following fields are missing from the Freyja results: {missing_fields}. Please check the output of Freyja {freyja_results}"
         )
         sys.exit(-67)
+
+    new_lineages = []
+    for lin in results["lineages"]:
+        if lin in lineage_aliases:
+            new_lineages.append(lineage_aliases[lin])
+        else:
+            new_lineages.append(lin)
+    results["lineages"] = new_lineages
 
     # Calculate conflict score, top lineage, and construct a summary
     confidence = np.exp(sum(a * np.log(a) for a in results["abundances"] if a > 0))

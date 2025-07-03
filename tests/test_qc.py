@@ -10,6 +10,7 @@ from vibecheck.src.qc import (
     check_tree,
     setup_outdir,
     setup_tempdir,
+    check_lineage_aliases
 )
 
 

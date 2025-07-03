@@ -12,6 +12,7 @@ PACKAGE_DIR = files("vibecheck")
 TREE = PACKAGE_DIR / "resources/o1_cholera.no_missing.pb"
 REFERENCE = PACKAGE_DIR / "resources/reference.fasta"
 BARCODES = PACKAGE_DIR / "resources/o1_barcodes.feather"
+ALIASES = PACKAGE_DIR / "resources/o1_aliases.csv"
 
 # Alternative names: Cholin, choline, Colin, vibecheck, vibcheck, vibration, vibrator,
 # marlin, vibrato, chool-aid
@@ -37,7 +38,7 @@ def main(sysargs=None):
     threads = multiprocessing.cpu_count()
     cwd = os.getcwd()
 
-    utilities.add_cli_arguments(parser, TREE, BARCODES, threads)
+    utilities.add_cli_arguments( parser=parser, default_tree=TREE, default_barcodes=BARCODES, default_aliases=ALIASES, threads=threads)
 
     if len(sysargs) < 1:
         parser.print_help()
@@ -57,6 +58,10 @@ def main(sysargs=None):
     # Check input files
     query_file, use_usher = qc.check_query_file(args.query)
 
+    aliases = {}
+    if args.lineage_aliases:
+        aliases = qc.check_lineage_aliases(args.lineage_aliases)
+
     # Check directories
     outdir = qc.setup_outdir(args.outdir, cwd)
     outfile = outdir / args.outfile
@@ -74,13 +79,14 @@ def main(sysargs=None):
         console.rule("[bold] Classifying input sequences")
         with console.status("Processing...", spinner="bouncingBall"):
             usher_tasks.run_pipeline(
-                query_file,
-                protobuf_file,
-                REFERENCE,
-                max_ambiguity,
-                tempdir,
-                outfile,
-                threads,
+                query_file=query_file,
+                protobuf_tree=protobuf_file,
+                reference=REFERENCE,
+                max_ambiguity=max_ambiguity,
+                lineage_aliases=aliases,
+                tempdir=tempdir,
+                outfile=outfile,
+                threads=threads,
             )
     else:
         # Checking Freyja pipeline
@@ -94,6 +100,7 @@ def main(sysargs=None):
                 reference=REFERENCE,
                 subsample_fraction=subsample_frac,
                 no_subsample=args.no_subsample,
+                lineage_aliases=aliases,
                 tempdir=tempdir,
                 outfile=outfile,
                 threads=threads,

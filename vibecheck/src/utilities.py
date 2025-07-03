@@ -11,6 +11,7 @@ def add_cli_arguments(
     parser: argparse.ArgumentParser,
     default_tree: Path,
     default_barcodes: Path,
+    default_aliases: Path,
     threads: int,
 ) -> None:
 
@@ -37,6 +38,11 @@ def add_cli_arguments(
         "--no-temp",
         action="store_true",
         help="Output all intermediate files, for dev purposes.",
+    )
+    parser.add_argument(
+        "--lineage-aliases",
+        default=str(default_aliases),
+        help="Path to CSV file containing lineage aliases. File must have two columns: `alias` and `lineage`.",
     )
     parser.add_argument(
         "-t",

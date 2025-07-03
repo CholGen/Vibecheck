@@ -212,7 +212,7 @@ def freyja_resultsA(tmp_path):
     )
 
     input_file.write_text(input_text)
-    parse_freyja_results(input_file, "testA", output_file)
+    parse_freyja_results(input_file, "testA", output_file, {})
     return output_file
 
 
@@ -250,7 +250,7 @@ def freyja_resultsB(tmp_path):
     )
 
     input_file.write_text(input_text)
-    parse_freyja_results(input_file, "testB", output_file)
+    parse_freyja_results(input_file, "testB", output_file, {})
     return output_file
 
 
@@ -277,7 +277,7 @@ def test_parse_freyja_results_with_alias(tmp_path):
     aliases = {"T13" : "Other"}
 
     input_file.write_text(input_text)
-    parse_freyja_results(input_file, "testB", output_file, aliases=aliases)
+    parse_freyja_results(input_file, "testB", output_file, lineage_aliases=aliases)
 
     expected_result = (
         "sequence_id,lineage,confidence,classification_notes\n"
