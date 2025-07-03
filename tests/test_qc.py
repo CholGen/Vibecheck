@@ -125,6 +125,15 @@ def test_check_query_file_dectect_fastq(tmp_path):
     assert not use_usher
 
 
+def test_check_query_file_dectect_single_fastq(tmp_path):
+    fileA = tmp_path / "read1.fastq.gz"
+    fileA.touch()
+
+    result, use_usher = check_query_file([str(fileA)])
+    assert result == (fileA, None)
+    assert not use_usher
+
+
 def test_check_query_file_dectect_fq(tmp_path):
     fileA = tmp_path / "read1.fq.gz"
     fileB = tmp_path / "read2.fq.gz"

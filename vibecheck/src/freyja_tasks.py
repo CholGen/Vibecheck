@@ -26,7 +26,11 @@ def run_pipeline(
         alignment = align_reads(reads[0], reads[1], reference, tempdir, threads)
     else:
         console.log(f"Sampling {subsample_fraction:.0%} of reads for classification")
-        sub_read1, sub_read2 = downsample_reads(*reads, tempdir, subsample_fraction)
+
+        if len( reads ) < 2:
+            sub_read1, sub_read2 = downsample_reads( read1=reads[0], read2=None, tempdir=tempdir, fraction=subsample_fraction)
+        else:
+            sub_read1, sub_read2 = downsample_reads(*reads, tempdir=tempdir, fraction=subsample_fraction)
 
         console.log("Aligning reads to reference")
         alignment = align_reads(sub_read1, sub_read2, reference, tempdir, threads)
@@ -46,7 +50,7 @@ def run_pipeline(
 
 def downsample_reads(
     read1: Path, read2: Path, tempdir: Path, fraction: float = 0.2
-) -> Tuple[Path, Path]:
+) -> tuple[Path, Path] | tuple[Path, None]:
     """Downsamples the input reads using `seqtk`.
 
     Parameters
@@ -62,34 +66,37 @@ def downsample_reads(
 
     Returns
     -------
-    Tuple[Path, Path]
+    Tuple[Path, Path] | Tuple[Path, None]
         location of fastq.gz files containing downsampled reads.
     """
     sub_read1 = tempdir / "subsampled_R1.fastq"
-    sub_read2 = tempdir / "subsampled_R2.fastq"
-
     command1 = f"seqtk sample -s 42 {read1} {fraction} > {sub_read1}"
-    command2 = f"seqtk sample -s 42 {read2} {fraction} > {sub_read2}"
-
     run_command(command1, error_message="Subsampling read1 failed")
-    run_command(command2, error_message="Subsampling read2 failed")
 
     if not sub_read1.exists():
         console.log(
             f"Subsampled first set of reads {sub_read1} does not exist. Check {tempdir}"
         )
         sys.exit(-60)
-    if not sub_read2.exists():
-        console.log(
-            f"Subsampled second set of reads {sub_read2} does not exist. Check {tempdir}"
-        )
-        sys.exit(-61)
 
-    return sub_read1, sub_read2
+    if read2 is not None:
+        sub_read2 = tempdir / "subsampled_R2.fastq"
+        command2 = f"seqtk sample -s 42 {read2} {fraction} > {sub_read2}"
+        run_command(command2, error_message="Subsampling read2 failed")
+
+        if not sub_read2.exists():
+            console.log(
+                f"Subsampled second set of reads {sub_read2} does not exist. Check {tempdir}"
+            )
+            sys.exit(-61)
+
+        return sub_read1, sub_read2
+    else:
+        return sub_read1, None
 
 
 def align_reads(
-    read1: Path, read2: Path, reference: Path, tempdir: Path, threads: int
+    read1: Path, read2: Path | None, reference: Path, tempdir: Path, threads: int
 ) -> Path:
     """Aligns reads to a reference using `minimap2` and processes with `samtools`.
 
@@ -97,7 +104,7 @@ def align_reads(
     ----------
     read1 : Path
         Location of fastq.gz file contain first set of reads.
-    read2 : Path
+    read2 : Path | None
         Location of fastq.gz file contain second set of reads.
     reference : Path
         Location of FASTA file containing the reference sequence.
@@ -113,7 +120,15 @@ def align_reads(
     """
     alignment = tempdir / "alignment.bam"
 
-    minimap_command = f"minimap2 -ax sr -t {threads} {reference} {read1} {read2} | samtools view -b - | samtools sort -o {alignment} -"
+    # Construct read inputs based on whether paired-end or single-end
+    read_inputs = f"{read1} {read2}" if read2 is not None else str(read1)
+
+    # Build the minimap2 command and associated BAM file wrangling.
+    minimap_command = (
+        f"minimap2 -ax sr -t {threads} {reference} {read_inputs} | "
+        f"samtools view -b - | "
+        f"samtools sort -o {alignment} -"
+    )
     index_command = f"samtools index {alignment}"
 
     run_command(minimap_command, error_message="Alignment of raw reads failed")

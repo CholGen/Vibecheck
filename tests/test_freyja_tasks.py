@@ -75,6 +75,31 @@ def test_downsample_reads(
         mock_paths["tempdir"] / "subsampled_R2.fastq",
     )
 
+@patch("vibecheck.src.freyja_tasks.run_command")
+def test_downsample_single_read(
+    mock_run_command,
+    mock_paths,
+    mock_file_exists,
+):
+    result = downsample_reads(
+        mock_paths["read1"],
+        None,
+        mock_paths["tempdir"],
+        fraction=0.2,
+    )
+
+    expected_calls = [
+        call(
+            "seqtk sample -s 42 /test/read1.fastq.gz 0.2 > /test/temp/subsampled_R1.fastq",
+            error_message="Subsampling read1 failed",
+        )
+    ]
+    mock_run_command.assert_has_calls(expected_calls)
+    assert result == (
+        mock_paths["tempdir"] / "subsampled_R1.fastq",
+        None
+    )
+
 
 @patch("vibecheck.src.freyja_tasks.run_command")
 def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
@@ -89,6 +114,29 @@ def test_align_reads(mock_run_command, mock_paths, mock_file_exists):
     expected_calls = [
         call(
             "minimap2 -ax sr -t 1 /test/reference.fasta /test/read1.fastq.gz /test/read2.fastq.gz | samtools view -b - | samtools sort -o /test/temp/alignment.bam -",
+            error_message="Alignment of raw reads failed",
+        ),
+        call(
+            "samtools index /test/temp/alignment.bam",
+            error_message="Indexing alignment failed",
+        ),
+    ]
+    mock_run_command.assert_has_calls(expected_calls)
+    assert result == mock_paths["tempdir"] / "alignment.bam"
+
+@patch("vibecheck.src.freyja_tasks.run_command")
+def test_align_reads_single_file(mock_run_command, mock_paths, mock_file_exists):
+    result = align_reads(
+        mock_paths["read1"],
+        None,
+        mock_paths["reference"],
+        mock_paths["tempdir"],
+        1
+    )
+
+    expected_calls = [
+        call(
+            "minimap2 -ax sr -t 1 /test/reference.fasta /test/read1.fastq.gz | samtools view -b - | samtools sort -o /test/temp/alignment.bam -",
             error_message="Alignment of raw reads failed",
         ),
         call(

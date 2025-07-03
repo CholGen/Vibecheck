@@ -177,6 +177,8 @@ def check_query_file(
         return use_file, True  # Return single Path for FASTA
     else:
         use_file = tuple(sorted(fastq_files))
+        if len(use_file) == 1:
+            use_file = (*use_file, None)
         console.print(f"Using query fastq files: {list(map(str, use_file))}")
         return use_file, False  # Return tuple of Paths for FASTQ
 
