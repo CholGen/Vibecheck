@@ -33,7 +33,7 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.fasta", "*.pb", "*.smk", "*.feather"]
+"*" = ["*.fasta", "*.pb", "*.smk", "*.feather", "*.csv"]
 
 [project.scripts]
 vibecheck = "vibecheck.command:main"
