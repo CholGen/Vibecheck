@@ -38,6 +38,7 @@ task vibecheck {
         File? usher_tree
         Float? max_ambiguity
         String docker="watronfire/vibecheck:2026.09.15"
+        Boolean assemblies
     }
     Int disk_size = 16
     command <<<
@@ -48,7 +49,8 @@ task vibecheck {
         vibecheck "~{query_fasta}" \
             --outdir . \
             ~{"--usher-tree " + usher_tree} \
-            ~{"--max-ambiguity " + max_ambiguity}
+            ~{"--max-ambiguity " + max_ambiguity} \
+            ~{true='--assemblies ' false='' assemblies}
 
         python3 <<CODE
         import csv
