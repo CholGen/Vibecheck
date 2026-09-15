@@ -52,7 +52,11 @@ def inputAll():
     outdir.mkdir(exist_ok=True)
     input_alignment = outdir / "all.fasta"
     subprocess.run(
-        f"cat tests/example_fasta/*.fasta > {input_alignment}",
+        # C10.fasta is a multi-contig assembly fixture used by the --assemblies
+        # tests, not a single-sequence sample, so it's excluded here.
+        "cat tests/example_fasta/ERR037738.fasta "
+        "tests/example_fasta/SAMN19110428.fasta "
+        f"tests/example_fasta/ERS14903183.fasta > {input_alignment}",
         shell=True,
     )
     sys_argv = [

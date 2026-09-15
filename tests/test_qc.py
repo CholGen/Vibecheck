@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from vibecheck.src.qc import (
+    check_assemblies,
     check_barcodes,
     check_parse_float_fraction,
     check_query_file,
@@ -178,6 +179,25 @@ def test_check_query_file_error_missing_fastq(tmp_path):
     with pytest.raises(SystemExit) as e:
         result, use_usher = check_query_file([str(fileA), str(fileB)])
     assert e.value.code == -2
+
+
+def test_check_assemblies_warns_on_fastq(capsys):
+    check_assemblies(True, False)
+    captured = capsys.readouterr()
+    assert "--assemblies" in captured.out
+    assert "Warning" in captured.out
+
+
+def test_check_assemblies_silent_on_fasta(capsys):
+    check_assemblies(True, True)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_check_assemblies_silent_when_not_set(capsys):
+    check_assemblies(False, False)
+    captured = capsys.readouterr()
+    assert captured.out == ""
 
 
 def test_check_tree_valid_file(tmp_path):

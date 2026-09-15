@@ -24,17 +24,27 @@ def run_pipeline(
     tempdir: Path,
     outfile: Path,
     threads: int,
+    assemblies: bool = False,
 ):
-    console.log("Aligning sequences to reference")
-    aln = align_sequences(query_file, reference, tempdir, threads)
+    qc_stats = None
+    if assemblies:
+        sample_id = query_file.name.split(".")[0]
 
-    console.log(
-        f"Filtering sequences with greater than {max_ambiguity:.0%} ambiguous bases"
-    )
-    qc_stats, filtered_aln = sequence_qc(aln, tempdir, max_ambiguity)
+        console.log("Aligning contigs to reference and calling variants")
+        vcf = align_and_call_variants(
+            query_file, reference, tempdir, threads, sample_id
+        )
+    else:
+        console.log("Aligning sequences to reference")
+        aln = align_sequences(query_file, reference, tempdir, threads)
 
-    console.log("Converting alignment to VCF")
-    vcf = convert_to_vcf(filtered_aln, reference, tempdir)
+        console.log(
+            f"Filtering sequences with greater than {max_ambiguity:.0%} ambiguous bases"
+        )
+        qc_stats, filtered_aln = sequence_qc(aln, tempdir, max_ambiguity)
+
+        console.log("Converting alignment to VCF")
+        vcf = convert_to_vcf(filtered_aln, reference, tempdir)
 
     console.log("Placing sequences into global phylogeny")
     results = classify_usher(vcf, protobuf_tree, tempdir, threads)
@@ -43,7 +53,10 @@ def run_pipeline(
     parsed_results = usher_parsing(results, tempdir, lineage_aliases=lineage_aliases)
 
     console.log("Writing results")
-    combine_results(parsed_results, qc_stats, outfile)
+    if assemblies:
+        write_assemblies_results(parsed_results, outfile)
+    else:
+        combine_results(parsed_results, qc_stats, outfile)
 
 
 def align_sequences(
@@ -87,6 +100,68 @@ def align_sequences(
         sys.exit(-10)
 
     return alignment
+
+
+def align_and_call_variants(
+    query_sequences: Path,
+    reference: Path,
+    tempdir: Path,
+    threads: int,
+    sample_id: str,
+) -> Path:
+    """Aligns assembly contigs against a reference and calls variants from a pileup
+    across all contigs, collapsing an entire assembly into a single set of variant
+    calls relative to the reference, rather than one alignment per contig.
+
+    Parameters
+    ----------
+    query_sequences: Path
+        Location of FASTA file containing assembly contigs to align against reference.
+    reference: Path
+        Location of FASTA file containing reference sequence.
+    tempdir: Path
+        Location of temporary directory.
+    threads: int
+        Number of threads to use.
+    sample_id: str
+        Name to assign to the sample in the resulting VCF.
+
+    Returns
+    -------
+    Path
+        Location of VCF file containing variant calls for the sample.
+    """
+    log_path = tempdir / "logs/minimap2.txt"
+    samfile = tempdir / "mapped.sorted.bam"
+    variants = tempdir / "variants.vcf"
+
+    align_command = (
+        f"minimap2 -a -x asm20 --sam-hit-only --secondary=no --score-N=0 -T {threads} "
+        f"-R '@RG\\tID:{sample_id}\\tSM:{sample_id}' {reference} {query_sequences} "
+        f"| samtools sort -o {samfile}"
+    )
+    index_command = f"samtools index {samfile}"
+    call_command = (
+        f"bcftools mpileup -Ou -f {reference} {samfile} "
+        f"| bcftools call --skip-variants indels --ploidy 1 -mv -Ov -o {variants}"
+    )
+
+    # Align contigs and sort resulting alignment
+    run_command(align_command, log_path, "Alignment with minimap2 failed")
+
+    # Index sorted alignment
+    run_command(index_command, error_message="Indexing of alignment failed")
+
+    # Call variants from pileup across all contigs
+    run_command(call_command, error_message="Variant calling with bcftools failed")
+
+    if not variants.exists():
+        console.log(
+            f"Error: Variant calling failed to generate the output {variants}. Check {tempdir}."
+        )
+        sys.exit(-13)
+
+    return variants
 
 
 def calculate_ambiquity(record: SeqRecord) -> float:
@@ -313,4 +388,21 @@ def combine_results(usher_results: Path, qc_results: Path, outfile: Path) -> Non
     usher_pd = pd.read_csv(usher_results)
     qc_pd = pd.read_csv(qc_results)
     results = qc_pd.merge(usher_pd, how="outer", on="sequence_id")
+    results.to_csv(outfile, index=False)
+
+
+def write_assemblies_results(usher_results: Path, outfile: Path) -> None:
+    """Writes the final assemblies report. No QC is performed on individual contigs
+    in assemblies mode, so this just renames the sample-identifying column rather
+    than merging in per-sequence QC results.
+
+    Parameters
+    ----------
+    usher_results: Path
+        Location of parsed Usher results, keyed by sample id.
+    outfile: Path
+        Location to write the final report to.
+    """
+    results = pd.read_csv(usher_results)
+    results = results.rename(columns={"sequence_id": "sample_id"})
     results.to_csv(outfile, index=False)

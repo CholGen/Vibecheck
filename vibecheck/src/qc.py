@@ -183,6 +183,26 @@ def check_query_file(
         return use_file, False  # Return tuple of Paths for FASTQ
 
 
+def check_assemblies(assemblies: bool, use_usher: bool) -> None:
+    """Warns if the --assemblies option was set but fastq files were detected as
+    input. The --assemblies option only affects the fasta/UShER pipeline, so it
+    has no effect when classifying fastq reads with the Freyja pipeline.
+
+    Parameters
+    ----------
+    assemblies: bool
+        Whether the --assemblies option was set.
+    use_usher: bool
+        Whether the input was detected as fasta (True) or fastq (False).
+    """
+    if assemblies and not use_usher:
+        console.log(
+            "Warning: --assemblies was set, but fastq files were detected as "
+            "input. The --assemblies option only applies to fasta input and "
+            "will not do anything in this situation."
+        )
+
+
 def check_tree(usher_tree: str) -> Path:
     """Confirms the existance of protobuf tree
 
