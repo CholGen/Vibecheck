@@ -75,6 +75,12 @@ def add_cli_arguments(
         default=0.3,
         help="Maximum number of ambiguous bases a sequence can have before its filtered from the analysis. Default: 0.3",
     )
+    sequence_args.add_argument(
+        "--assemblies",
+        action="store_true",
+        help="Treat the input FASTA as a set of contigs from a single assembled sample, "
+        "and produce one classification for the whole sample instead of one per sequence.",
+    )
 
     read_args.add_argument(
         "-b",
