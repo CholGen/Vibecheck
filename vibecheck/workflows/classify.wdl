@@ -38,7 +38,7 @@ task vibecheck {
         File? usher_tree
         Float? max_ambiguity
         String docker="watronfire/vibecheck:2026.09.15"
-        Boolean assemblies
+        Boolean assemblies=false
     }
     Int disk_size = 16
     command <<<
