@@ -130,6 +130,39 @@ def inputFreyha():
         shutil.rmtree(outdir)
 
 
+@pytest.fixture
+def inputAssemblies():
+    outdir = Path("tests/inputAssemblies")
+    sys_argv = [
+        "--outdir",
+        str(outdir),
+        "--assemblies",
+        "--threads",
+        "4",
+        "tests/example_fasta/C10.fasta",
+    ]
+    main(sys_argv)
+    yield outdir
+
+    if outdir.exists():
+        shutil.rmtree(outdir)
+
+
+def test_assemblies_pipeline(inputAssemblies):
+    results = inputAssemblies / "lineage_report.csv"
+    assert results.exists()
+
+    lines = results.read_text().splitlines()
+    header = lines[0].split(",")
+    rows = [dict(zip(header, line.split(","))) for line in lines[1:]]
+
+    # The 34 contigs in C10.fasta all belong to a single sample, so classifying
+    # with --assemblies should collapse them into one row rather than 34.
+    assert len(rows) == 1
+    assert rows[0]["sample_id"] == "C10"
+    assert rows[0]["lineage"] == "T13"
+
+
 @pytest.mark.skip(reason="Input files are too large")
 def test_Freyja_pipeline(inputFreyha):
     results = inputFreyha / "lineage_report.csv"
