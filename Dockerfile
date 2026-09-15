@@ -1,7 +1,7 @@
-FROM mambaorg/micromamba:1.5.11
+FROM mambaorg/micromamba:2.9
 
 # metadata labels
-LABEL base.image="mambaorg/micromamba:1.5.11"
+LABEL base.image="mambaorg/micromamba:2.9"
 LABEL dockerfile.version="1"
 LABEL software="vibecheck"
 LABEL software.version="2025.01.07"
