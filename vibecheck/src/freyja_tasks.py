@@ -18,13 +18,14 @@ def run_pipeline(
     outfile: Path,
     tempdir: Path,
     threads: int,
+    platform: str = "illumina",
 ) -> None:
 
     name = str(reads[0].name).split(".")[0]
 
     if no_subsample:
         console.log("Aligning reads to reference")
-        alignment = align_reads(reads[0], reads[1], reference, tempdir, threads)
+        alignment = align_reads(reads[0], reads[1], reference, tempdir, threads, platform=platform)
     else:
         console.log(f"Sampling {subsample_fraction:.0%} of reads for classification")
 
@@ -34,13 +35,13 @@ def run_pipeline(
             sub_read1, sub_read2 = downsample_reads(*reads, tempdir=tempdir, fraction=subsample_fraction)
 
         console.log("Aligning reads to reference")
-        alignment = align_reads(sub_read1, sub_read2, reference, tempdir, threads)
+        alignment = align_reads(sub_read1, sub_read2, reference, tempdir, threads, platform=platform)
 
     console.log("Calculating depth of coverage across reference genome.")
-    depth = generate_depth(alignment, reference, tempdir)
+    depth = generate_depth(alignment, reference, tempdir, platform=platform)
 
     console.log("Calling variants between reads and reference.")
-    variants_filled = call_variants(alignment, reference, tempdir, threads)
+    variants_filled = call_variants(alignment, reference, tempdir, threads, platform=platform)
 
     console.log("Calculating relative lineage abundances using Freyja.")
     freyja_results = freyja_demix(variants_filled, depth, barcodes, tempdir)
@@ -97,7 +98,12 @@ def downsample_reads(
 
 
 def align_reads(
-    read1: Path, read2: Path | None, reference: Path, tempdir: Path, threads: int
+    read1: Path,
+    read2: Path | None,
+    reference: Path,
+    tempdir: Path,
+    threads: int,
+    platform: str = "illumina",
 ) -> Path:
     """Aligns reads to a reference using `minimap2` and processes with `samtools`.
 
@@ -113,6 +119,8 @@ def align_reads(
         Location of temporary directory.
     threads : int
         number of threads to use during alignment
+    platform : str, optional
+        Sequencing platform used to generate the reads (default is "illumina").
 
     Returns
     -------
@@ -124,9 +132,11 @@ def align_reads(
     # Construct read inputs based on whether paired-end or single-end
     read_inputs = f"{read1} {read2}" if read2 is not None else str(read1)
 
+    preset = "map-ont" if platform == "ont" else "sr"
+
     # Build the minimap2 command and associated BAM file wrangling.
     minimap_command = (
-        f"minimap2 -ax sr -t {threads} {reference} {read_inputs} | "
+        f"minimap2 -ax {preset} -t {threads} {reference} {read_inputs} | "
         f"samtools view -b - | "
         f"samtools sort -o {alignment} -"
     )
@@ -142,7 +152,9 @@ def align_reads(
     return alignment
 
 
-def generate_depth(alignment: Path, reference: Path, tempdir: Path) -> Path:
+def generate_depth(
+    alignment: Path, reference: Path, tempdir: Path, platform: str = "illumina"
+) -> Path:
     """Generates depth information from the alignment file using `samtools mpileup`.
 
     Parameters
@@ -153,6 +165,8 @@ def generate_depth(alignment: Path, reference: Path, tempdir: Path) -> Path:
         Location of FASTA file containing reference sequence.
     tempdir : Path
         Location of temporary directory.
+    platform : str, optional
+        Sequencing platform used to generate the reads (default is "illumina").
 
     Returns
     -------
@@ -161,7 +175,9 @@ def generate_depth(alignment: Path, reference: Path, tempdir: Path) -> Path:
     """
     depth = tempdir / "depth.txt"
 
-    mpileup_command = f"samtools mpileup -aa -A -d 600000 -Q 20 -q 0 -B -f {reference} {alignment} | cut -f1-4 > {depth}"
+    # ONT base qualities are lower, so match the threshold of `bcftools mpileup -X ont`.
+    min_base_quality = 5 if platform == "ont" else 20
+    mpileup_command = f"samtools mpileup -aa -A -d 600000 -Q {min_base_quality} -q 0 -B -f {reference} {alignment} | cut -f1-4 > {depth}"
     run_command(mpileup_command, error_message="Generating depth file failed")
 
     if not depth.exists():
@@ -171,7 +187,11 @@ def generate_depth(alignment: Path, reference: Path, tempdir: Path) -> Path:
 
 
 def call_variants(
-    alignment: Path, reference: Path, tempdir: Path, threads: int = 4
+    alignment: Path,
+    reference: Path,
+    tempdir: Path,
+    threads: int = 4,
+    platform: str = "illumina",
 ) -> Path:
     """Calls variants from the alignment file using bcftools.
 
@@ -185,6 +205,8 @@ def call_variants(
         Location of temporary directory.
     threads : int, optional
         Number of threads to use for variant calling (default is 4).
+    platform : str, optional
+        Sequencing platform used to generate the reads (default is "illumina").
 
     Returns
     -------
@@ -194,8 +216,9 @@ def call_variants(
     variants = tempdir / "variants.vcf"
     variants_filled = tempdir / "variants_filled.vcf"
 
+    quality_args = "-X ont -d 600000 -q 0" if platform == "ont" else "-d 600000 -Q 20 -q 0 -B"
     mpileup_command = (
-        f"bcftools mpileup --threads {threads} -d 600000 -Q 20 -q 0 -B -a INFO/AD,INFO/ADF,INFO/ADR -Ou "
+        f"bcftools mpileup --threads {threads} {quality_args} -a INFO/AD,INFO/ADF,INFO/ADR -Ou "
         f"-f {reference} {alignment} | bcftools call --threads {threads} -mv -Ov --ploidy 1 -o {variants}"
     )
     fill_tags_command = (

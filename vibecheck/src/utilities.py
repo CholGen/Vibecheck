@@ -90,6 +90,12 @@ def add_cli_arguments(
         help="Feather formatted lineage barcodes to use instead of default O1 barcodes",
     )
     read_args.add_argument(
+        "--platform",
+        choices=["illumina", "ont"],
+        default="illumina",
+        help="Sequencing platform used to generate the reads. Default: illumina",
+    )
+    read_args.add_argument(
         "-s",
         "--subsample",
         type=float,

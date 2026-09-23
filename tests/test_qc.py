@@ -6,6 +6,7 @@ from vibecheck.src.qc import (
     check_assemblies,
     check_barcodes,
     check_parse_float_fraction,
+    check_platform,
     check_query_file,
     check_threads,
     check_tree,
@@ -196,6 +197,39 @@ def test_check_assemblies_silent_on_fasta(capsys):
 
 def test_check_assemblies_silent_when_not_set(capsys):
     check_assemblies(False, False)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_check_platform_illumina_paired(tmp_path):
+    reads = (tmp_path / "read1.fastq.gz", tmp_path / "read2.fastq.gz")
+    assert check_platform("illumina", reads, False) == "illumina"
+
+
+def test_check_platform_ont_single(tmp_path):
+    reads = (tmp_path / "reads.fastq.gz", None)
+    assert check_platform("ont", reads, False) == "ont"
+
+
+def test_check_platform_ont_paired_error(tmp_path):
+    # ONT sequencing produces single-end reads, so a pair of fastqs is an error.
+    reads = (tmp_path / "read1.fastq.gz", tmp_path / "read2.fastq.gz")
+    with pytest.raises(SystemExit) as e:
+        check_platform("ont", reads, False)
+    assert e.value.code == -14
+
+
+def test_check_platform_ont_warns_on_fasta(tmp_path, capsys):
+    query = tmp_path / "query.fasta"
+    check_platform("ont", query, True)
+    captured = capsys.readouterr()
+    assert "--platform" in captured.out
+    assert "Warning" in captured.out
+
+
+def test_check_platform_illumina_silent_on_fasta(tmp_path, capsys):
+    query = tmp_path / "query.fasta"
+    check_platform("illumina", query, True)
     captured = capsys.readouterr()
     assert captured.out == ""
 

@@ -203,6 +203,48 @@ def check_assemblies(assemblies: bool, use_usher: bool) -> None:
         )
 
 
+def check_platform(
+    platform: str, query_file: Union[Path, Tuple[Path, Path]], use_usher: bool
+) -> str:
+    """Confirms the sequencing platform is compatible with the query files. The
+    --platform option only affects the fastq/Freyja pipeline, so a warning is shown
+    if it is set for fasta input. ONT reads are single-end, so exits if a pair of
+    fastq files is supplied with --platform ont.
+
+    Parameters
+    ----------
+    platform: str
+        Sequencing platform used to generate the reads.
+    query_file: Union[Path, Tuple[Path, Path]]
+        Query file(s) returned by `check_query_file`.
+    use_usher: bool
+        Whether the input was detected as fasta (True) or fastq (False).
+
+    Returns
+    -------
+    str
+        Confirmed sequencing platform.
+    """
+    if use_usher:
+        if platform != "illumina":
+            console.log(
+                f"Warning: --platform {platform} was set, but a fasta file was "
+                "detected as input. The --platform option only applies to fastq "
+                "input and will not do anything in this situation."
+            )
+        return platform
+
+    if platform == "ont" and query_file[1] is not None:
+        console.log(
+            "Error: Two fastq files were supplied with --platform ont. ONT reads are "
+            "single-end, so please supply a single fastq file."
+        )
+        sys.exit(-14)
+
+    console.print(f"Using sequencing platform: {platform}")
+    return platform
+
+
 def check_tree(usher_tree: str) -> Path:
     """Confirms the existance of protobuf tree
 
