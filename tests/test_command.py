@@ -187,13 +187,13 @@ def test_invalid_platform():
     assert e.value.code != 0
 
 
-def test_ont_paired_reads_error():
-    sys_argv = [
-        "--platform",
-        "ont",
-        "tests/example_fastqs/OUG-1858.subsample.1.fastq.gz",
-        "tests/example_fastqs/OUG-1858.subsample.2.fastq.gz",
-    ]
+def test_ont_paired_reads_error(tmp_path):
+    # Paired reads are rejected before they're read, so empty files are enough.
+    read1 = tmp_path / "reads.1.fastq.gz"
+    read2 = tmp_path / "reads.2.fastq.gz"
+    read1.touch()
+    read2.touch()
+    sys_argv = ["--platform", "ont", str(read1), str(read2)]
     with pytest.raises(SystemExit) as e:
         main(sys_argv)
     assert e.value.code == -14
