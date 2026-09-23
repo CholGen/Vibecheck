@@ -13,7 +13,7 @@ workflow classify_cholera_reads {
             patterns: ["*.fastq","*.fq", "*.fastq.gz", "*.fq.gz"]
         }
         read2: {
-            description: "Reverse reads",
+            description: "Reverse reads. Omit for single-end or ONT data.",
             patterns: ["*.fastq","*.fq", "*.fastq.gz", "*.fq.gz"]
         }
         subsampling_fraction: {
@@ -21,6 +21,9 @@ workflow classify_cholera_reads {
         }
         skip_subsampling: {
             description: "Whether to skip subsampling of reads."
+        }
+        platform: {
+            description: "Sequencing platform used to generate the reads: 'illumina' or 'ont'. Default: illumina"
         }
     }
 
@@ -41,11 +44,12 @@ task vibecheck_reads {
     }
     input {
         File read1
-        File read2
+        File? read2
         File? lineage_barcodes
         Float? subsampling_fraction
         Boolean skip_subsampling=false
-        String docker="watronfire/vibecheck:2026.09.15"
+        String platform="illumina"
+        String docker="watronfire/vibecheck:2026.09.23"
     }
     Int disk_size = 16
     command <<<
@@ -53,10 +57,11 @@ task vibecheck_reads {
 
         vibecheck -v | tee VERSION
 
-        vibecheck "~{read1}" "~{read2}"  \
+        vibecheck "~{read1}" ~{if defined(read2) then '"~{read2}"' else ""} \
             --outdir . \
+            --platform ~{platform} \
             ~{"--barcodes " + lineage_barcodes} \
-            ~{"--subsampling_fraction " + subsampling_fraction} \
+            ~{"--subsample " + subsampling_fraction} \
             ~{true='--no-subsample' false='' skip_subsampling}
 
         python3 <<CODE

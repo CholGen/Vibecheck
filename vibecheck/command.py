@@ -58,6 +58,7 @@ def main(sysargs=None):
     # Check input files
     query_file, use_usher = qc.check_query_file(args.query)
     qc.check_assemblies(args.assemblies, use_usher)
+    platform = qc.check_platform(args.platform, query_file, use_usher)
 
     aliases = {}
     if args.lineage_aliases:
@@ -106,6 +107,7 @@ def main(sysargs=None):
                 tempdir=tempdir,
                 outfile=outfile,
                 threads=threads,
+                platform=platform,
             )
 
     console.rule("[bold] Complete!")

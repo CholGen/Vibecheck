@@ -11,6 +11,7 @@ from vibecheck.src.freyja_tasks import (
     call_variants,
     freyja_demix,
     parse_freyja_results,
+    run_pipeline,
 )
 
 
@@ -149,6 +150,31 @@ def test_align_reads_single_file(mock_run_command, mock_paths, mock_file_exists)
 
 
 @patch("vibecheck.src.freyja_tasks.run_command")
+def test_align_reads_ont(mock_run_command, mock_paths, mock_file_exists):
+    result = align_reads(
+        mock_paths["read1"],
+        None,
+        mock_paths["reference"],
+        mock_paths["tempdir"],
+        1,
+        platform="ont",
+    )
+
+    expected_calls = [
+        call(
+            "minimap2 -ax map-ont -t 1 /test/reference.fasta /test/read1.fastq.gz | samtools view -b - | samtools sort -o /test/temp/alignment.bam -",
+            error_message="Alignment of raw reads failed",
+        ),
+        call(
+            "samtools index /test/temp/alignment.bam",
+            error_message="Indexing alignment failed",
+        ),
+    ]
+    mock_run_command.assert_has_calls(expected_calls)
+    assert result == mock_paths["tempdir"] / "alignment.bam"
+
+
+@patch("vibecheck.src.freyja_tasks.run_command")
 def test_generate_depth(mock_run_command, mock_paths, mock_file_exists):
     result = generate_depth(
         mock_paths["alignment"], mock_paths["reference"], mock_paths["tempdir"]
@@ -156,6 +182,24 @@ def test_generate_depth(mock_run_command, mock_paths, mock_file_exists):
 
     mock_run_command.assert_called_once_with(
         "samtools mpileup -aa -A -d 600000 -Q 20 -q 0 -B -f /test/reference.fasta /test/temp/alignment.bam | cut -f1-4 > /test/temp/depth.txt",
+        error_message="Generating depth file failed",
+    )
+    assert result == mock_paths["tempdir"] / "depth.txt"
+
+
+@patch("vibecheck.src.freyja_tasks.run_command")
+def test_generate_depth_ont(mock_run_command, mock_paths, mock_file_exists):
+    result = generate_depth(
+        mock_paths["alignment"],
+        mock_paths["reference"],
+        mock_paths["tempdir"],
+        platform="ont",
+    )
+
+    # ONT base qualities are lower than Illumina's, so the base quality threshold
+    # matches the one used by `bcftools mpileup -X ont`.
+    mock_run_command.assert_called_once_with(
+        "samtools mpileup -aa -A -d 600000 -Q 5 -q 0 -B -f /test/reference.fasta /test/temp/alignment.bam | cut -f1-4 > /test/temp/depth.txt",
         error_message="Generating depth file failed",
     )
     assert result == mock_paths["tempdir"] / "depth.txt"
@@ -179,6 +223,56 @@ def test_call_variants(mock_run_command, mock_paths, mock_file_exists):
     ]
     mock_run_command.assert_has_calls(expected_calls)
     assert result == mock_paths["tempdir"] / "variants_filled.vcf"
+
+
+@patch("vibecheck.src.freyja_tasks.run_command")
+def test_call_variants_ont(mock_run_command, mock_paths, mock_file_exists):
+    result = call_variants(
+        mock_paths["alignment"],
+        mock_paths["reference"],
+        mock_paths["tempdir"],
+        platform="ont",
+    )
+
+    expected_calls = [
+        call(
+            "bcftools mpileup --threads 4 -X ont -d 600000 -q 0 -a INFO/AD,INFO/ADF,INFO/ADR -Ou -f /test/reference.fasta /test/temp/alignment.bam | bcftools call --threads 4 -mv -Ov --ploidy 1 -o /test/temp/variants.vcf",
+            error_message="Variant calling failed",
+        ),
+        call(
+            "bcftools +fill-tags /test/temp/variants.vcf -Ou -o /test/temp/variants_filled.vcf -- -t AF",
+            error_message="Filling tags in variants failed",
+        ),
+    ]
+    mock_run_command.assert_has_calls(expected_calls)
+    assert result == mock_paths["tempdir"] / "variants_filled.vcf"
+
+
+@pytest.mark.parametrize("platform", ["illumina", "ont"])
+@patch("vibecheck.src.freyja_tasks.parse_freyja_results")
+@patch("vibecheck.src.freyja_tasks.freyja_demix")
+@patch("vibecheck.src.freyja_tasks.call_variants")
+@patch("vibecheck.src.freyja_tasks.generate_depth")
+@patch("vibecheck.src.freyja_tasks.align_reads")
+def test_run_pipeline_passes_platform(
+    mock_align, mock_depth, mock_variants, mock_demix, mock_parse, platform, mock_paths
+):
+    run_pipeline(
+        reads=(mock_paths["read1"], None),
+        reference=mock_paths["reference"],
+        barcodes=mock_paths["barcodes"],
+        lineage_aliases={},
+        subsample_fraction=0.2,
+        no_subsample=True,
+        outfile=mock_paths["tempdir"] / "lineage_report.csv",
+        tempdir=mock_paths["tempdir"],
+        threads=1,
+        platform=platform,
+    )
+
+    assert mock_align.call_args.kwargs["platform"] == platform
+    assert mock_depth.call_args.kwargs["platform"] == platform
+    assert mock_variants.call_args.kwargs["platform"] == platform
 
 
 @patch("vibecheck.src.freyja_tasks.run_command")

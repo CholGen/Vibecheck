@@ -178,3 +178,58 @@ def test_Freyja_pipeline(inputFreyha):
 
     assert results.exists()
     assert results.read_text() == expected_result
+
+
+def test_invalid_platform():
+    sys_argv = ["--platform", "pacbio", "tests/example_fasta/ERR037738.fasta"]
+    with pytest.raises(SystemExit) as e:
+        main(sys_argv)
+    assert e.value.code != 0
+
+
+def test_ont_paired_reads_error():
+    sys_argv = [
+        "--platform",
+        "ont",
+        "tests/example_fastqs/OUG-1858.subsample.1.fastq.gz",
+        "tests/example_fastqs/OUG-1858.subsample.2.fastq.gz",
+    ]
+    with pytest.raises(SystemExit) as e:
+        main(sys_argv)
+    assert e.value.code == -14
+
+
+ONT_READS = Path("tests/example_fastqs/ERR16983652_1.fastq.gz")
+
+
+@pytest.fixture
+def inputONT():
+    outdir = Path("tests/inputONT")
+    sys_argv = [
+        "--outdir",
+        str(outdir),
+        "--platform",
+        "ont",
+        "--threads",
+        "4",
+        str(ONT_READS),
+    ]
+    main(sys_argv)
+    yield outdir
+
+    if outdir.exists():
+        shutil.rmtree(outdir)
+
+
+# The ONT fastq is too large to commit, so this only runs where it's available locally.
+@pytest.mark.skipif(not ONT_READS.exists(), reason="ONT example reads are not available")
+def test_ONT_pipeline(inputONT):
+    results = inputONT / "lineage_report.csv"
+    assert results.exists()
+
+    lines = results.read_text().splitlines()
+    header = lines[0].split(",")
+    rows = [dict(zip(header, line.split(","))) for line in lines[1:]]
+
+    assert len(rows) == 1
+    assert rows[0]["lineage"] == "T13"
